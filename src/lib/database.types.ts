@@ -60,6 +60,59 @@ export type Database = {
         }
         Relationships: []
       }
+      events: {
+        Row: {
+          all_day: boolean
+          couple_id: string
+          created_at: string
+          created_by: string
+          ends_at: string
+          id: string
+          kind: string
+          location: string | null
+          note: string | null
+          pinned: boolean
+          starts_at: string
+          title: string
+        }
+        Insert: {
+          all_day?: boolean
+          couple_id?: string
+          created_at?: string
+          created_by?: string
+          ends_at: string
+          id?: string
+          kind: string
+          location?: string | null
+          note?: string | null
+          pinned?: boolean
+          starts_at: string
+          title: string
+        }
+        Update: {
+          all_day?: boolean
+          couple_id?: string
+          created_at?: string
+          created_by?: string
+          ends_at?: string
+          id?: string
+          kind?: string
+          location?: string | null
+          note?: string | null
+          pinned?: boolean
+          starts_at?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matches: {
         Row: {
           added_by: string | null

@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button, Message } from '../../components/ui'
 import { useAuth } from '../../lib/auth'
 import { frenchError, supabase } from '../../lib/supabase'
-import { useMovieMatches, useRatings, type MovieMatch } from './hooks'
+import { markMatchesSeen, useMovieMatches, useRatings, type MovieMatch } from './hooks'
 import { MatchBadge, MovieRow } from './MovieRow'
 import { RatingSheet } from './RatingSheet'
 import { SearchSheet } from './SearchSheet'
@@ -14,6 +14,8 @@ export function Watchlist() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [rating, setRating] = useState<MovieMatch | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+
+  useEffect(markMatchesSeen, [])
 
   const todo = data.filter((m) => !m.done_at)
   const nameOf = (id: string | null) => members.find((m) => m.user_id === id)?.display_name
