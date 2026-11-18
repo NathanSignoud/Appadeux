@@ -20,8 +20,8 @@ Avant de pousser :
 - Workers & Pages → le Worker `appadeux` → Settings → Build :
   - dépôt GitHub connecté, branche `main` ;
   - build command : `npm run build` ; deploy command : `npx wrangler deploy` ;
-  - **Build variables** : `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`.
-    Ce sont des variables de **build** (Vite les écrit dans le JS), pas des variables d'exécution.
+  - **Variables** : aucune à configurer. `VITE_SUPABASE_URL` et `VITE_SUPABASE_PUBLISHABLE_KEY` (publiques) sont dans `.env.production`, versionné.
+    Cloudflare refuse les variables d'exécution sur un Worker 100 % statique, et Vite les lit au build de toute façon.
 - Fallback SPA : `assets.not_found_handling = "single-page-application"` dans `wrangler.jsonc`.
 - Supabase → Authentication → URL Configuration : mettre l'URL du site dans *Site URL*.
 
@@ -35,6 +35,6 @@ Avant de pousser :
 
 ## En cas de problème
 
-- Page blanche en production : variables de build manquantes → voir les logs de build Cloudflare.
+- Page blanche en production : vérifier `.env.production` (noms exacts, préfixe `VITE_`) puis les logs de build Cloudflare.
 - Connexion impossible : vérifier *Site URL* et que l'URL Supabase correspond au bon projet.
 - Vieille version affichée : fermer complètement la PWA et la rouvrir (le service worker se met à jour).

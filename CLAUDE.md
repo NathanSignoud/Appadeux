@@ -59,7 +59,7 @@ Tables prévues dans les phases suivantes : `media`, `swipes`, `watchlist`, `rat
 
 - Tout est derrière une connexion. Les inscriptions Supabase sont **fermées** une fois les deux comptes créés.
 - **RLS activée sur chaque table**, politiques basées sur `couple_id = my_couple_id()`. Les éléments secrets (liste cadeaux) sont filtrés aussi sur `auth.uid()` **dans la politique**, pas seulement dans l'UI.
-- Aucune clé secrète dans le front ni dans Git. Seules `VITE_SUPABASE_URL` et `VITE_SUPABASE_PUBLISHABLE_KEY` vont dans le front. Le jeton TMDB est un secret d'Edge Function.
+- Aucune clé secrète dans le front ni dans Git. Seules `VITE_SUPABASE_URL` et `VITE_SUPABASE_PUBLISHABLE_KEY` vont dans le front. Le jeton TMDB est un secret d'Edge Function. Ces deux valeurs publiques sont versionnées dans `.env.production` ; les vraies clés secrètes ne vont jamais dans un fichier `.env.*` versionné.
 - Photos dans un bucket **privé**, servies par URLs signées.
 
 ## Commandes utiles
