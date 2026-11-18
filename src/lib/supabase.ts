@@ -18,6 +18,7 @@ const messages: Record<string, string> = {
   'Invalid login credentials': 'Email ou mot de passe incorrect.',
   'User already registered': 'Un compte existe déjà avec cet email. Connecte-toi.',
   'Signups not allowed for this instance': 'Les inscriptions sont fermées.',
+  'New password should be different from the old password.': 'Le nouveau mot de passe doit être différent de l’ancien.',
 }
 
 export function frenchError(error: { message: string }): string {

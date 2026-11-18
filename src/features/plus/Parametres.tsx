@@ -46,6 +46,8 @@ export function Parametres() {
 
       <Abonnements />
 
+      <MotDePasse />
+
       <Button variant="soft" onClick={() => supabase.auth.signOut()}>
         Se déconnecter
       </Button>
@@ -59,6 +61,42 @@ export function Parametres() {
         . Cette app utilise l’API TMDB mais n’est ni approuvée ni certifiée par TMDB.
       </p>
     </>
+  )
+}
+
+function MotDePasse() {
+  const { session } = useAuth()
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState<{ kind: 'error' | 'info'; text: string } | null>(null)
+
+  async function save(e: FormEvent) {
+    e.preventDefault()
+    if (password !== confirm) return setMessage({ kind: 'error', text: 'Les deux mots de passe ne sont pas identiques.' })
+    setBusy(true)
+    setMessage(null)
+    const { error } = await supabase.auth.updateUser({ password })
+    setBusy(false)
+    if (error) return setMessage({ kind: 'error', text: frenchError(error) })
+    setPassword('')
+    setConfirm('')
+    setMessage({ kind: 'info', text: 'Mot de passe changé. Utilise-le à ta prochaine connexion.' })
+  }
+
+  return (
+    <form onSubmit={save} className="flex flex-col gap-4 rounded-[28px] bg-white p-5">
+      <h2 className="text-lg font-semibold">Mon mot de passe</h2>
+      <p className="text-prune-doux">Compte : {session?.user.email}</p>
+      {/* champ email caché : aide les gestionnaires de mots de passe à associer le nouveau mot de passe au bon compte */}
+      <input type="email" autoComplete="username" value={session?.user.email ?? ''} readOnly hidden />
+      <Field label="Nouveau mot de passe" type="password" autoComplete="new-password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} className="[&_input]:bg-lilas" />
+      <Field label="Encore une fois" type="password" autoComplete="new-password" minLength={8} required value={confirm} onChange={(e) => setConfirm(e.target.value)} className="[&_input]:bg-lilas" />
+      {message && <Message kind={message.kind}>{message.text}</Message>}
+      <Button type="submit" disabled={busy}>
+        Changer mon mot de passe
+      </Button>
+    </form>
   )
 }
 
