@@ -1,0 +1,52 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/fredoka';
+
+/* Direction « Guimauve » (80 %) + touche « Riso » (20 %) — voir CLAUDE.md */
+@theme {
+  --font-sans: 'Fredoka Variable', ui-rounded, system-ui, sans-serif;
+
+  --color-lilas: #efeafb; /* fond de l'app */
+  --color-lilas-fonce: #e3dafb; /* onglet actif, rails de progression */
+  --color-prune: #3b2a55; /* texte */
+  --color-prune-doux: #6a5a85; /* texte secondaire (contraste 5,6:1 sur lilas) */
+  --color-peche: #ffc9a8;
+  --color-menthe: #bdebd3;
+  --color-beurre: #ffe8a3;
+  --color-violet: #a994e8;
+
+  /* Encres riso : une par personne, superposées (multiply) pour ce qui se fait à deux.
+     Pour des aplats et des formes uniquement, jamais pour du texte. */
+  --color-encre-a: #7c9cf0;
+  --color-encre-b: #f48fb5;
+  --color-erreur: #b3261e;
+}
+
+html,
+body {
+  background: var(--color-lilas);
+  color: var(--color-prune);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Formes « guimauve » : rondes mais jamais parfaitement régulières */
+.blob {
+  border-radius: 58% 42% 52% 48% / 46% 54% 46% 54%;
+}
+.blob-alt {
+  border-radius: 44% 56% 47% 53% / 55% 45% 55% 45%;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-violet);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

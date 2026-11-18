@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Deux encres riso qui se superposent : l'une, l'autre, et le violet de « nous » -->
+  <defs>
+    <clipPath id="a"><circle cx="208" cy="236" r="132"/></clipPath>
+  </defs>
+  <rect width="512" height="512" fill="#EFEAFB"/>
+  <circle cx="208" cy="236" r="132" fill="#7C9CF0"/>
+  <circle cx="304" cy="276" r="132" fill="#F48FB5"/>
+  <circle cx="304" cy="276" r="132" fill="#8A6FD6" clip-path="url(#a)"/>
+</svg>

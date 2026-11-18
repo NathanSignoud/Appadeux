@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Le nom du Worker donne l'URL : nous.<ton-sous-domaine>.workers.dev
+  "name": "nous",
+  "compatibility_date": "2026-11-01",
+  // Site statique uniquement : pas de script Worker, Cloudflare sert dist/
+  "assets": {
+    "directory": "./dist",
+    // Fallback SPA : toute route inconnue renvoie index.html (le routeur React prend le relais)
+    "not_found_handling": "single-page-application"
+  }
+}
