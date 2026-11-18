@@ -69,8 +69,8 @@ npm run dev                                   # serveur local (http://localhost:
 npm run build                                 # vérif TypeScript + build dans dist/
 npm run preview                               # sert le build (pour tester la PWA)
 npx supabase link --project-ref <ref>         # relier le dossier au projet Supabase (une fois)
-npx supabase db push                          # appliquer les migrations sur le projet distant
-npx supabase gen types typescript --linked > src/lib/database.types.ts
+npx supabase db push --remote                          # appliquer les migrations sur le projet distant
+npx supabase gen types typescript --remote > src/lib/database.types.ts
 npx supabase functions deploy <nom> --use-api # déployer une Edge Function sans Docker
 npx wrangler deploy                           # déploiement manuel (normalement : git push)
 ```

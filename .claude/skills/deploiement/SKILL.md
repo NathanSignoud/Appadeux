@@ -11,7 +11,7 @@ Un `git push` sur `main` suffit : Cloudflare (Workers Builds) récupère le code
 
 Avant de pousser :
 1. `npm run build` passe sans erreur en local.
-2. Les migrations SQL sont appliquées : `npx supabase db push` (Cloudflare ne touche pas à Supabase).
+2. Les migrations SQL sont appliquées : `npx supabase db push --remote` (Cloudflare ne touche pas à Supabase).
 3. Les Edge Functions modifiées sont déployées : `npx supabase functions deploy <nom> --use-api`.
 4. `npm run preview` : vérifier l'app servie depuis `dist/`.
 

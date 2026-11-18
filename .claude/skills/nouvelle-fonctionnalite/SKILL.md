@@ -13,8 +13,8 @@ Cocher chaque étape dans l'ordre. Ne pas sauter la RLS ni le test mobile.
 4. **Realtime** : si l'autre doit voir les changements en direct, ajouter la table à `supabase_realtime`.
 5. **Appliquer et générer les types** :
    ```bash
-   npx supabase db push
-   npx supabase gen types typescript --linked > src/lib/database.types.ts
+   npx supabase db push --remote
+   npx supabase gen types typescript --remote > src/lib/database.types.ts
    ```
 6. **Hooks de données** dans `src/features/<nom>/hooks.ts` :
    - lecture via `supabase.from(...)` typée par `Tables<'x'>` ;

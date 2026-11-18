@@ -52,8 +52,8 @@ alter publication supabase_realtime add table public.ma_table;
 ## 4. Appliquer
 
 ```bash
-npx supabase db push            # applique les migrations en attente sur le projet distant
-npx supabase gen types typescript --linked > src/lib/database.types.ts
+npx supabase db push --remote            # applique les migrations en attente sur le projet distant
+npx supabase gen types typescript --remote > src/lib/database.types.ts
 npm run build                   # les types générés doivent compiler
 ```
 
