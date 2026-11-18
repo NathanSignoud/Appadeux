@@ -5,28 +5,37 @@ description: Brancher une nouvelle source de cartes (films, restos, recettes…)
 
 # Moteur de swipe
 
-> Le moteur est construit en phase 1. Mettre à jour cette skill avec les vrais chemins et signatures dès qu'il existe.
+Le moteur (`src/features/swipe/`) ne connaît rien aux films. Exemple complet à copier : `src/features/cine/movieSource.tsx`.
 
-## Principe
+## Ce que fait le moteur (`SwipeDeck`)
 
-Le composant de swipe ne connaît rien aux films. Il reçoit une `SwipeSource<T>` qui sait :
+- Charge les pages de la source, en excluant ce que j'ai déjà swipé (`swipes`) et ce qui est déjà dans `matches` pour ce `kind`.
+- Gère les gestes (glisser à droite = envie, à gauche = non) et les deux boutons accessibles.
+- Enregistre dans `swipes` (`kind`, `item_id`, `liked`, `payload`).
+- Le trigger SQL `handle_swipe_match()` crée la ligne `matches` (`source = 'match'`) quand les deux ont dit oui ; le moteur écoute le Realtime et affiche `MatchOverlay` **chez les deux**.
+- Repart de zéro quand `source.key` change (filtres).
+
+## L'interface (`src/features/swipe/types.ts`)
 
 ```ts
 interface SwipeSource<T> {
-  kind: string                                  // 'movie', 'restaurant'… : stocké dans swipes.kind
-  fetchBatch(cursor?: string): Promise<{ items: T[]; next?: string }>
-  getId(item: T): string                        // id stable (ex. id TMDB)
-  renderCard(item: T): React.ReactNode          // le visuel de la carte
+  kind: string                         // 'movie', 'restaurant'… (^[a-z_]{1,30}$)
+  key: string                          // change avec les filtres → nouveau paquet
+  fetchPage(page: number): Promise<{ items: T[]; hasMore: boolean }>
+  getId(item: T): string               // id stable
+  toPayload(item: T): Json             // instantané stocké (< 20 Ko), recopié dans le match
+  fromPayload(payload: Json): T
+  renderCard(item: T): ReactNode       // carte plein cadre ; les <button> internes restent cliquables
+  describe(item: T): { title: string; image: string | null }  // écran « Match ! »
 }
 ```
 
-Le moteur gère : la pile de cartes, les gestes (droite = envie, gauche = non), l'enregistrement dans `swipes` (`kind`, `item_id`, `liked`), le préchargement, et l'écran « Match ! » quand les deux ont dit oui.
-
 ## Ajouter une source
 
-1. Créer `src/features/<nom>/source.ts` qui exporte une `SwipeSource<MonType>`.
-2. Si les données viennent d'une API à clé : passer par une Edge Function, jamais depuis le front.
-3. Choisir un `kind` unique ; les matchs sont détectés en SQL sur `(couple_id, kind, item_id)`.
-4. Écrire `renderCard` en respectant la direction visuelle (image plein cadre, infos clés lisibles d'un coup d'œil).
-5. Monter le moteur sur une route : `<SwipeDeck source={maSource} onMatch={...} />`.
-6. Tester à deux comptes : un match doit apparaître chez les deux en temps réel.
+1. Créer `src/features/<nom>/<nom>Source.tsx` qui retourne une `SwipeSource<MonType>` (le construire dans un `useMemo` sur les filtres).
+2. Données venant d'une API à clé : nouvelle opération dans une Edge Function, jamais depuis le front.
+3. Mettre dans `toPayload` tout ce dont la liste des matchs aura besoin plus tard (évite de rappeler l'API).
+4. Monter le moteur : `<SwipeDeck source={source} empty={<p>…</p>} />`.
+5. Afficher les matchs : `useLiveQuery(['matches'], () => supabase.from('matches').select('*').eq('kind', '<kind>'))`.
+6. Aucune migration nécessaire : `swipes` et `matches` sont génériques.
+7. Tester à deux comptes (ou avec `supabase/tests/cine_match.sql` adapté au nouveau `kind`) : le match apparaît chez les deux.

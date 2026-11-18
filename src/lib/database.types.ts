@@ -44,18 +44,65 @@ export type Database = {
           created_at: string
           id: string
           invite_code: string | null
+          streaming_providers: number[]
         }
         Insert: {
           created_at?: string
           id?: string
           invite_code?: string | null
+          streaming_providers?: number[]
         }
         Update: {
           created_at?: string
           id?: string
           invite_code?: string | null
+          streaming_providers?: number[]
         }
         Relationships: []
+      }
+      matches: {
+        Row: {
+          added_by: string | null
+          couple_id: string
+          created_at: string
+          done_at: string | null
+          id: string
+          item_id: string
+          kind: string
+          payload: Json
+          source: string
+        }
+        Insert: {
+          added_by?: string | null
+          couple_id?: string
+          created_at?: string
+          done_at?: string | null
+          id?: string
+          item_id: string
+          kind: string
+          payload?: Json
+          source?: string
+        }
+        Update: {
+          added_by?: string | null
+          couple_id?: string
+          created_at?: string
+          done_at?: string | null
+          id?: string
+          item_id?: string
+          kind?: string
+          payload?: Json
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       members: {
         Row: {
@@ -79,6 +126,86 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "members_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ratings: {
+        Row: {
+          comment: string | null
+          couple_id: string
+          match_id: string
+          stars: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          couple_id?: string
+          match_id: string
+          stars: number
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          comment?: string | null
+          couple_id?: string
+          match_id?: string
+          stars?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ratings_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ratings_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      swipes: {
+        Row: {
+          couple_id: string
+          created_at: string
+          item_id: string
+          kind: string
+          liked: boolean
+          payload: Json
+          user_id: string
+        }
+        Insert: {
+          couple_id?: string
+          created_at?: string
+          item_id: string
+          kind: string
+          liked: boolean
+          payload?: Json
+          user_id?: string
+        }
+        Update: {
+          couple_id?: string
+          created_at?: string
+          item_id?: string
+          kind?: string
+          liked?: boolean
+          payload?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "swipes_couple_id_fkey"
             columns: ["couple_id"]
             isOneToOne: false
             referencedRelation: "couples"

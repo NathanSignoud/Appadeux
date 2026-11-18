@@ -22,10 +22,14 @@ src/
   lib/
     supabase.ts       client Supabase typé
     database.types.ts types GÉNÉRÉS (ne pas éditer à la main)
-    auth.tsx          AuthProvider / useAuth : session, moi, l'autre, couple
-  components/         UI partagée (ui.tsx, TabBar, Layout, Soon = page provisoire)
+    auth.tsx          AuthProvider / useAuth : session, moi, l'autre, couple, abonnements
+    useLiveQuery.ts   lecture Supabase + rechargement Realtime (pattern de données du projet)
+    tmdb.ts           client de l'Edge Function tmdb, type Movie, genres, humeurs
+  components/         UI partagée (ui.tsx, Sheet, TabBar, Layout, Soon = page provisoire)
   features/<nom>/     une fonctionnalité = ses pages + ses hooks de données
                       (auth/Connexion, couple/Bienvenue, accueil/Accueil, plus/Plus + Parametres)
+  features/swipe/     moteur de swipe GÉNÉRIQUE (SwipeDeck, SwipeSource, MatchOverlay)
+  features/cine/      Cine (sous-onglets) → CineSwipe, Watchlist, Vus ; movieSource branche les films sur le moteur
 public/logo.svg       source des icônes PWA (réglages : pwa-assets.config.ts)
 supabase/
   migrations/         SQL versionné (voir skill migration-supabase)
@@ -38,7 +42,9 @@ wrangler.jsonc        config Cloudflare (fallback SPA)
 
 - **Langue** : texte d'interface en français ; identifiants de code, tables et colonnes en anglais ; routes en français (`/cine`, `/calendrier`, `/listes`, `/plus`).
 - **Composants** : un composant par fichier, `PascalCase.tsx`, fonctions (pas de classes). Hooks `useXxx` dans `features/<nom>/hooks.ts`.
-- **État** : pas de librairie d'état. Le contexte `useAuth()` porte la session et le couple ; chaque feature lit Supabase dans ses hooks et s'abonne au Realtime pour rester à jour chez l'autre.
+- **État** : pas de librairie d'état. Le contexte `useAuth()` porte la session et le couple ; chaque feature lit Supabase dans ses hooks via `useLiveQuery(tables, requête)`, qui relit la requête dès qu'une table change (chez moi ou chez l'autre).
+- **Panneaux** : `<Sheet>` (dialog natif) pour tout formulaire secondaire ; son contenu est démonté à la fermeture, donc l'état du formulaire repart à zéro à chaque ouverture.
+- **Écritures** : pas d'`upsert` sur une table dont certaines colonnes sont verrouillées (`grant update (col)`) : PostgREST mettrait à jour toutes les colonnes envoyées. Faire insert OU update.
 - **Données** : montants en **centimes** (`integer`), dates en `timestamptz`, ids `uuid`. Toute table métier a une colonne `couple_id`.
 - **Couleurs par personne** : déterminées par l'ordre d'arrivée dans le couple (créateur = personne A, second = personne B), pas stockées en base.
 - **Erreurs SQL** : les fonctions lèvent des codes courts (`invalid_code`, `couple_full`…) que le front traduit en français.
@@ -47,13 +53,18 @@ wrangler.jsonc        config Cloudflare (fallback SPA)
 
 | Table | Rôle | RLS |
 |---|---|---|
-| `couples` | `id`, `invite_code` (null une fois complet) | lecture : mon couple |
+| `couples` | `id`, `invite_code` (null une fois complet), `streaming_providers int[]` (ids TMDB) | lecture : mon couple ; update de `streaming_providers` |
 | `members` | `user_id` (PK → un seul couple), `couple_id`, `display_name` | lecture : mon couple ; update de `display_name` sur ma ligne |
+| `swipes` | PK (`user_id`, `kind`, `item_id`), `liked`, `payload jsonb` (instantané de la carte) | **chacun ne voit que les siens** ; insert/update des siens |
+| `matches` | `kind`, `item_id` (unique par couple), `payload`, `source` (`match` \| `manual`), `added_by`, `done_at` (= « Vu ») | lecture/suppression couple ; insert seulement `source = 'manual'` ; update seulement `done_at` |
+| `ratings` | PK (`match_id`, `user_id`), `stars` 1–5, `comment` | lecture couple ; écriture des siennes ; update seulement `stars`, `comment`, `updated_at` |
 
-Fonctions : `my_couple_id()` (base de toutes les politiques), `create_couple(nom)`, `join_couple(code, nom)`.
-Aucun INSERT/DELETE direct sur ces tables : tout passe par les fonctions.
+Fonctions : `my_couple_id()` (base de toutes les politiques), `create_couple(nom)`, `join_couple(code, nom)`, trigger `handle_swipe_match()` (crée le match quand les deux ont dit oui ; seul moyen d'obtenir `source = 'match'`).
+Pour les films (`kind = 'movie'`), `payload` = type `Movie` de `src/lib/tmdb.ts` (durée, genres, pays, langue, collection, plateformes FR) : la watchlist, le passeport et le Wrapped le lisent sans rappeler TMDB.
+Realtime : `members`, `matches`, `ratings`.
+Edge Function `tmdb` : opérations `discover`, `search`, `movie`, `providers` ; vérifie la session (JWKS ES256, `verify_jwt = false` dans `config.toml`) ; secret `TMDB_READ_TOKEN`.
 
-Tables prévues dans les phases suivantes : `media`, `swipes`, `watchlist`, `ratings`, `vetoes`, `shows_progress`, `betrayals` (ciné) ; `events` ; `lists`, `list_items` ; `expenses`, `settlements` ; `alphabet_letters`, `alphabet_photos`.
+Tables prévues dans les phases suivantes : `vetoes`, `shows_progress`, `betrayals` (ciné) ; `events` ; `lists`, `list_items` ; `expenses`, `settlements` ; `alphabet_letters`, `alphabet_photos`.
 
 ## Sécurité (non négociable)
 
@@ -71,7 +82,8 @@ npm run preview                               # sert le build (pour tester la PW
 npx supabase link --project-ref <ref>         # relier le dossier au projet Supabase (une fois)
 npx supabase db push --remote                          # appliquer les migrations sur le projet distant
 npx supabase gen types typescript --remote > src/lib/database.types.ts
-npx supabase functions deploy <nom> --use-api # déployer une Edge Function sans Docker
+npx supabase functions deploy <nom> --use-api --remote # déployer une Edge Function sans Docker
+npx supabase db query --remote -f test.sql    # exécuter du SQL (tests RLS dans un begin … rollback)
 npx wrangler deploy                           # déploiement manuel (normalement : git push)
 ```
 

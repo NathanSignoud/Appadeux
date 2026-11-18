@@ -12,6 +12,30 @@ export function Button({ variant = 'primary', className = '', ...props }: Button
   )
 }
 
+/** Pastille à bascule (filtres, abonnements). */
+export function Chip({ pressed, className = '', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { pressed: boolean }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={pressed}
+      className={`min-h-11 rounded-full px-4 font-medium transition active:scale-95 ${pressed ? 'bg-prune text-white' : 'bg-white text-prune'} ${className}`}
+      {...props}
+    />
+  )
+}
+
+export function Stars({ value }: { value: number }) {
+  return (
+    <span role="img" aria-label={`${value} sur 5`} className="text-xl tracking-wider">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <span key={n} className={n <= value ? 'text-violet' : 'text-lilas-fonce'}>
+          ★
+        </span>
+      ))}
+    </span>
+  )
+}
+
 export function Field({ label, className = '', ...props }: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   const id = useId()
   return (

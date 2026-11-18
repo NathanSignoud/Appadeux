@@ -59,12 +59,15 @@ npm run build                   # les types générés doivent compiler
 
 ## 5. Vérifier la RLS
 
-Dans Supabase → SQL Editor, tester en se faisant passer pour un utilisateur :
+Écrire un test dans `supabase/tests/<sujet>.sql`, toujours entre `begin;` et `rollback;` (rien n'est enregistré, le Realtime ne diffuse rien). Modèle : `supabase/tests/cine_match.sql`.
 
-```sql
-set local role authenticated;
-set local request.jwt.claims = '{"sub":"<uuid-utilisateur>"}';
-select * from public.ma_table; -- ne doit renvoyer que les lignes de son couple
+- Se faire passer pour chacun des deux membres : `set local role authenticated;` puis
+  `select set_config('request.jwt.claims', json_build_object('sub', '<uuid>', 'role', 'authenticated')::text, true);`
+- Stocker les résultats intermédiaires avec `set_config('t.x', …, true)` et les afficher dans un `select` final avec la valeur attendue dans le nom de colonne.
+- Tester aussi ce qui **doit échouer** (fichier séparé, l'erreur annule la transaction) : modifier une ligne de l'autre couple, lire un secret de l'autre, fabriquer une ligne réservée à un trigger.
+
+```bash
+npx supabase db query --remote --yes -f supabase/tests/<sujet>.sql
 ```
 
 Puis mettre à jour le schéma dans `CLAUDE.md`.

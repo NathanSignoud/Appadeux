@@ -1,7 +1,8 @@
-import { useState, type FormEvent } from 'react'
-import { Avatar, Button, Field, Message } from '../../components/ui'
+import { useEffect, useState, type FormEvent } from 'react'
+import { Avatar, Button, Chip, Field, Message } from '../../components/ui'
 import { useAuth } from '../../lib/auth'
 import { frenchError, supabase } from '../../lib/supabase'
+import { imageUrl, tmdb, type Provider } from '../../lib/tmdb'
 
 export function Parametres() {
   const { me, partner, inkOf, refresh } = useAuth()
@@ -43,9 +44,58 @@ export function Parametres() {
         ))}
       </section>
 
+      <Abonnements />
+
       <Button variant="soft" onClick={() => supabase.auth.signOut()}>
         Se déconnecter
       </Button>
+
+      {/* Mention exigée par les conditions d'utilisation de l'API TMDB */}
+      <p className="px-2 text-sm text-prune-doux">
+        Les infos sur les films viennent de{' '}
+        <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer" className="underline underline-offset-2">
+          TMDB
+        </a>
+        . Cette app utilise l’API TMDB mais n’est ni approuvée ni certifiée par TMDB.
+      </p>
     </>
+  )
+}
+
+/** Nos abonnements streaming : servent au filtre « Seulement sur nos abonnements » du ciné. */
+function Abonnements() {
+  const { me, providers, refresh } = useAuth()
+  const [list, setList] = useState<Provider[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    tmdb
+      .providers()
+      .then((r) => setList(r.providers))
+      .catch((e: Error) => setError(e.message))
+  }, [])
+
+  async function toggle(id: number) {
+    const next = providers.includes(id) ? providers.filter((p) => p !== id) : [...providers, id]
+    const { error } = await supabase.from('couples').update({ streaming_providers: next }).eq('id', me!.couple_id)
+    if (error) setError(frenchError(error))
+    else await refresh()
+  }
+
+  return (
+    <section className="flex flex-col gap-3 rounded-[28px] bg-white p-5">
+      <h2 className="text-lg font-semibold">Nos abonnements</h2>
+      <p className="text-prune-doux">Pour ne swiper que des films disponibles chez vous. Commun à vous deux.</p>
+      {error && <Message kind="error">{error}</Message>}
+      {!list && !error && <p className="text-prune-doux">Chargement des plateformes…</p>}
+      <div className="flex flex-wrap gap-2">
+        {list?.map((p) => (
+          <Chip key={p.id} pressed={providers.includes(p.id)} onClick={() => toggle(p.id)} className="flex items-center gap-2 pl-1.5 [&:not([aria-pressed=true])]:bg-lilas">
+            <img src={imageUrl(p.logoPath, 'w92')!} alt="" className="size-8 rounded-full" />
+            {p.name}
+          </Chip>
+        ))}
+      </div>
+    </section>
   )
 }

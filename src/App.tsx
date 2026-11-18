@@ -4,6 +4,10 @@ import { Soon } from './components/Soon'
 import { Button } from './components/ui'
 import { Accueil } from './features/accueil/Accueil'
 import { Connexion } from './features/auth/Connexion'
+import { Cine } from './features/cine/Cine'
+import { CineSwipe } from './features/cine/CineSwipe'
+import { Vus } from './features/cine/Vus'
+import { Watchlist } from './features/cine/Watchlist'
 import { Bienvenue } from './features/couple/Bienvenue'
 import { Parametres } from './features/plus/Parametres'
 import { Plus } from './features/plus/Plus'
@@ -29,7 +33,11 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<Accueil />} />
-        <Route path="cine" element={<Soon title="Ciné" phase={1} />} />
+        <Route path="cine" element={<Cine />}>
+          <Route index element={<CineSwipe />} />
+          <Route path="watchlist" element={<Watchlist />} />
+          <Route path="vus" element={<Vus />} />
+        </Route>
         <Route path="calendrier" element={<Soon title="Agenda" phase={2} />} />
         <Route path="listes" element={<Soon title="Listes" phase={3} />} />
         <Route path="plus" element={<Plus />} />

@@ -13,6 +13,8 @@ type AuthState = {
   partner: Member | null
   /** Code à transmettre tant que le couple n'est pas complet, null ensuite. */
   inviteCode: string | null
+  /** Abonnements streaming du couple (ids TMDB), réglés dans les paramètres. */
+  providers: number[]
   loading: boolean
   error: string | null
   refresh: () => Promise<void>
@@ -27,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null | undefined>(undefined)
   const [members, setMembers] = useState<Member[]>([])
   const [inviteCode, setInviteCode] = useState<string | null>(null)
+  const [providers, setProviders] = useState<number[]>([])
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -47,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const [m, c] = await Promise.all([
       supabase.from('members').select('*').order('joined_at'),
-      supabase.from('couples').select('invite_code').maybeSingle(),
+      supabase.from('couples').select('invite_code, streaming_providers').maybeSingle(),
     ])
     // En cas d'erreur réseau on ne vide pas le couple : sinon l'app proposerait d'en créer un nouveau
     if (m.error || c.error) {
@@ -56,15 +59,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null)
       setMembers(m.data)
       setInviteCode(c.data?.invite_code ?? null)
+      setProviders(c.data?.streaming_providers ?? [])
     }
     setLoaded(true)
   }, [userId])
 
+  // Dépend de userId (via refresh), pas de l'objet session : le renouvellement horaire du jeton ne recharge pas tout
+  const sessionKnown = session !== undefined
   useEffect(() => {
-    if (session === undefined) return
+    if (!sessionKnown) return
     setLoaded(false)
     void refresh()
-  }, [session, refresh])
+  }, [sessionKnown, refresh])
 
   // Temps réel : l'arrivée de l'autre membre (ou un changement de prénom) met l'écran à jour
   useEffect(() => {
@@ -89,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         me,
         partner,
         inviteCode,
+        providers,
         loading: session === undefined || !loaded,
         error,
         refresh,
