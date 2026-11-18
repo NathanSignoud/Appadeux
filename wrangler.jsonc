@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // Le nom du Worker donne l'URL : nous.<ton-sous-domaine>.workers.dev
-  "name": "nous",
+  // Le nom du Worker donne l'URL : appadeux.<ton-sous-domaine>.workers.dev
+  "name": "appadeux",
   "compatibility_date": "2026-11-01",
   // Site statique uniquement : pas de script Worker, Cloudflare sert dist/
   "assets": {

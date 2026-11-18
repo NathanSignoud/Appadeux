@@ -86,7 +86,7 @@ npx wrangler deploy                           # déploiement manuel (normalement
 
 - Connexion par email + mot de passe (un lien magique s'ouvrirait dans Safari, hors de la PWA sur iOS).
 - Alphabet des dates : le créateur du couple organise la lettre A, puis alternance.
-- URL : sous-domaine gratuit `workers.dev` pour commencer ; domaine perso possible plus tard sans changer le code.
+- URL : Worker `appadeux` sur le sous-domaine gratuit `workers.dev` pour commencer ; domaine perso possible plus tard sans changer le code.
 
 ## Direction visuelle — « Guimauve » (80 %) + « Riso » (20 %)
 

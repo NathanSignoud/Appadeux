@@ -17,7 +17,7 @@ Avant de pousser :
 
 ## Réglages Cloudflare (déjà faits une fois)
 
-- Workers & Pages → le Worker `nous` → Settings → Build :
+- Workers & Pages → le Worker `appadeux` → Settings → Build :
   - dépôt GitHub connecté, branche `main` ;
   - build command : `npm run build` ; deploy command : `npx wrangler deploy` ;
   - **Build variables** : `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`.
