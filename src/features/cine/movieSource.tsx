@@ -11,9 +11,9 @@ export function movieSource(filters: CineFilters, ourProviders: number[]): Swipe
 
   return {
     kind: 'movie',
-    key: JSON.stringify({ genres, maxRuntime: filters.maxRuntime, providers }),
+    key: JSON.stringify({ genres, maxRuntime: filters.maxRuntime, providers, country: filters.country, decade: filters.decade }),
     async fetchPage(page) {
-      const { movies, totalPages } = await tmdb.discover({ page, genres, maxRuntime: filters.maxRuntime, providers })
+      const { movies, totalPages } = await tmdb.discover({ page, genres, maxRuntime: filters.maxRuntime, providers, country: filters.country, decade: filters.decade })
       return { items: movies, hasMore: page < totalPages }
     },
     getId: (m) => String(m.id),

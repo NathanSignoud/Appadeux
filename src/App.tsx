@@ -1,8 +1,10 @@
+import { lazy, Suspense } from 'react'
 import { Route, Routes } from 'react-router'
 import { Layout } from './components/Layout'
-import { Soon } from './components/Soon'
 import { Button } from './components/ui'
 import { Accueil } from './features/accueil/Accueil'
+import { Alphabet } from './features/alphabet/Alphabet'
+import { LettreDetail } from './features/alphabet/LettreDetail'
 import { Connexion } from './features/auth/Connexion'
 import { Calendrier } from './features/calendrier/Calendrier'
 import { MonthView } from './features/calendrier/MonthView'
@@ -18,6 +20,9 @@ import { Listes } from './features/listes/Listes'
 import { Parametres } from './features/plus/Parametres'
 import { Plus } from './features/plus/Plus'
 import { useAuth } from './lib/auth'
+
+// La carte du monde pèse ~40 Ko compressés : chargée seulement en ouvrant le passeport
+const Passeport = lazy(() => import('./features/passeport/Passeport').then((m) => ({ default: m.Passeport })))
 
 export default function App() {
   const { loading, error, session, me, partner, refresh } = useAuth()
@@ -52,8 +57,16 @@ export default function App() {
         <Route path="listes/:id" element={<ListeDetail />} />
         <Route path="plus" element={<Plus />} />
         <Route path="depenses" element={<Depenses />} />
-        <Route path="alphabet" element={<Soon title="Alphabet des dates" phase={4} />} />
-        <Route path="passeport" element={<Soon title="Passeport ciné" phase={4} />} />
+        <Route path="alphabet" element={<Alphabet />} />
+        <Route path="alphabet/:letter" element={<LettreDetail />} />
+        <Route
+          path="passeport"
+          element={
+            <Suspense fallback={null}>
+              <Passeport />
+            </Suspense>
+          }
+        />
         <Route path="parametres" element={<Parametres />} />
         <Route path="*" element={<Accueil />} />
       </Route>

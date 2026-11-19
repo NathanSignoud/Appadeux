@@ -4,6 +4,7 @@ import { useAuth } from '../../lib/auth'
 import { coversDay, daysUntil, endOf, formatWhen, untilPhrase } from '../../lib/dates'
 import { useEvents, type CalEvent } from '../calendrier/hooks'
 import { lastSeenMatches, useMovieMatches } from '../cine/hooks'
+import { LETTERS, statusOf, useLetters } from '../alphabet/hooks'
 import { useBalance } from '../depenses/hooks'
 import { formatEuros } from '../depenses/money'
 import { remaining, useLists } from '../listes/hooks'
@@ -16,6 +17,7 @@ export function Accueil() {
   const { data: matches } = useMovieMatches()
   const { cents: owed, loading: balanceLoading } = useBalance(me?.user_id ?? '')
   const { data: lists } = useLists()
+  const { data: letters } = useLetters()
   if (!me || !partner) return null
 
   const now = new Date()
@@ -25,6 +27,8 @@ export function Accueil() {
   const next = events.find((e) => e.kind !== 'absence' && endOf(e) > now)
   const seen = lastSeenMatches()
   const newMatches = matches.filter((m) => m.source === 'match' && !m.done_at && m.created_at > seen).length
+  const lettersDone = letters.filter((l) => l.status === 'done').length
+  const nextLetter = LETTERS.find((l) => statusOf(letters.find((r) => r.letter === l)) !== 'done')
   const todo = lists.filter((l) => !l.owner_id).reduce((n, l) => n + remaining(l), 0)
   const nameOf = (e: CalEvent) => (e.created_by === me.user_id ? null : partner.display_name)
 
@@ -129,8 +133,15 @@ export function Accueil() {
             )}
           </span>
         </Link>
-        <Link to="/alphabet" className="col-span-2 flex min-h-16 items-center rounded-[28px_28px_10px_28px] bg-white px-5 py-4 active:scale-[0.97]">
-          <span className="text-lg font-semibold">Alphabet des dates</span>
+        <Link to="/alphabet" className="col-span-2 flex min-h-16 flex-col gap-2 rounded-[28px_28px_10px_28px] bg-white px-5 py-4 active:scale-[0.97]">
+          <span className="flex items-baseline justify-between gap-3">
+            <span className="text-lg font-semibold">Alphabet des dates</span>
+            <span className="text-xl font-bold">{lettersDone}/26</span>
+          </span>
+          <span aria-hidden="true" className="h-2.5 rounded-full bg-lilas">
+            <span className="block h-full rounded-full bg-violet" style={{ width: `${(lettersDone / 26) * 100}%` }} />
+          </span>
+          <span className="text-prune-doux">{nextLetter ? `Prochaine lettre : ${nextLetter}` : 'De A à Z, bravo !'}</span>
         </Link>
       </div>
     </>

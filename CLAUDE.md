@@ -25,8 +25,9 @@ src/
     auth.tsx          AuthProvider / useAuth : session, moi, l'autre, couple, abonnements
     useLiveQuery.ts   lecture Supabase + rechargement Realtime (pattern de données du projet)
     tmdb.ts           client de l'Edge Function tmdb, type Movie, genres, humeurs
+    photos.ts         compression des photos avant envoi + useSignedUrls (bucket privé, URLs signées en cache)
     dates.ts          dates locales (J-n, « jusqu’à jeudi », grille du mois…) — testé par tests/dates.test.ts
-  components/         UI partagée (ui.tsx, Sheet, TabBar, Layout, Soon = page provisoire)
+  components/         UI partagée (ui.tsx, Sheet, TabBar, Layout)
   features/<nom>/     une fonctionnalité = ses pages + ses hooks de données
                       (auth/Connexion, couple/Bienvenue, accueil/Accueil, plus/Plus + Parametres)
   features/swipe/     moteur de swipe GÉNÉRIQUE (SwipeDeck, SwipeSource, MatchOverlay)
@@ -34,6 +35,9 @@ src/
   features/calendrier/ Calendrier (sous-onglets, EventSheet partagé via Outlet context) → MonthView, UpcomingView
   features/listes/    Listes (aperçu + listes secrètes) → ListeDetail (cocher, modifier, glisser pour réordonner), ListSheet
   features/depenses/  Depenses (solde + « On est quittes ») → Historique, Recap ; ExpenseSheet ; money.ts = logique d'argent pure (testée)
+  features/alphabet/  Alphabet (grille A→Z, progression) → LettreDetail (thème, date, agenda, photos, idées), Fete (26/26), ideas.ts
+  features/passeport/ Passeport (chargé à la demande) : carte, décennies, badges, suggestions ; passport.ts = logique pure (testée) ;
+                      worldMap.ts GÉNÉRÉ par scripts/simplify-map.mjs depuis @svg-maps/world (CC BY 4.0)
   features/accueil/   tableau de bord : compte à rebours, absences, prochain événement, nouveaux matchs, solde, choses à faire
 public/logo.svg       source des icônes PWA (réglages : pwa-assets.config.ts)
 supabase/
@@ -67,16 +71,20 @@ wrangler.jsonc        config Cloudflare (fallback SPA)
 | `list_items` | `list_id`, `text`, `done`, `position` (double, ordre manuel : milieu des deux voisins ; défaut = horodatage → en fin de liste) | suit la visibilité de sa liste ; update de `text`, `done`, `position` |
 | `expenses` | `label`, `amount_cents`, `owed_cents` (part due par celui qui **n'a pas** payé), `category` (liste fixe), `spent_on` (date), `paid_by` | tout le couple ; `paid_by` doit être membre du couple ; `owed_cents ≤ amount_cents` |
 | `settlements` | `from_user` a remboursé `amount_cents` à `to_user` (« On est quittes ») | lecture, ajout, suppression (= annuler) par le couple ; pas de modification |
+| `alphabet_letters` | `letter` A–Z (unique par couple, ligne créée au 1er enregistrement), `status` (`todo` \| `planned` \| `done`), `organizer_id` (null = alternance : A pour le créateur), `title` (« B comme … »), `description`, `date_on`, `event_id` (événement « À deux » créé depuis la lettre) | tout le couple lit/crée/modifie ; organisateur = membre ; événement = du couple ; pas de suppression |
+| `alphabet_photos` | `letter_id`, `path` (`<couple_id>/<letter_id>/<uuid>.jpg` dans le bucket `alphabet`) ; couverture = la première | lecture, ajout (chemin dans le dossier du couple et de la lettre), suppression par le couple |
 | `events` | `title`, `kind` (`together` | `solo` | `absence`), `starts_at`, `ends_at`, `all_day`, `location`, `note`, `pinned` (compte à rebours), `created_by` = la personne concernée (couleur) | tout le couple lit/modifie/supprime ; insert seulement à son nom ; `couple_id` et `created_by` non modifiables ; une absence est forcément `all_day` |
 
 Fonctions : `my_couple_id()` (base de toutes les politiques), `create_couple(nom)`, `join_couple(code, nom)`, trigger `handle_swipe_match()` (crée le match quand les deux ont dit oui ; seul moyen d'obtenir `source = 'match'`).
 Pour les films (`kind = 'movie'`), `payload` = type `Movie` de `src/lib/tmdb.ts` (durée, genres, pays, langue, collection, plateformes FR) : la watchlist, le passeport et le Wrapped le lisent sans rappeler TMDB.
-Realtime : `members`, `matches`, `ratings`, `events`, `lists`, `list_items`, `expenses`, `settlements`. Le Realtime applique la politique de lecture à chaque abonné (les lignes secrètes ne partent pas chez l'autre) ; seule exception, un DELETE est diffusé à tous avec **uniquement l'id** de la ligne (aucun contenu).
+Realtime : `members`, `matches`, `ratings`, `events`, `lists`, `list_items`, `expenses`, `settlements`, `alphabet_letters`, `alphabet_photos`.
+Storage : bucket **privé** `alphabet` (5 Mo max, JPEG/WebP) ; politiques sur `storage.objects` : premier dossier = `my_couple_id()`. Photos compressées côté téléphone (1600 px, JPEG 82 %), affichées par URLs signées (1 h). Le Realtime applique la politique de lecture à chaque abonné (les lignes secrètes ne partent pas chez l'autre) ; seule exception, un DELETE est diffusé à tous avec **uniquement l'id** de la ligne (aucun contenu).
 Solde : `balance()` de `src/features/depenses/money.ts` (somme des `owed_cents` ± remboursements), testé par `tests/depenses.test.ts`.
 Journée entière : `starts_at` = minuit du premier jour, `ends_at` = minuit du **dernier jour inclus** (heure locale).
-Edge Function `tmdb` : opérations `discover`, `search`, `movie`, `providers` ; vérifie la session (JWKS ES256, `verify_jwt = false` dans `config.toml`) ; secret `TMDB_READ_TOKEN`.
+Edge Function `tmdb` : opérations `discover` (option `country` / `decade` pour le passeport → les mieux notés), `search`, `movie`, `providers` ; vérifie la session (JWKS ES256, `verify_jwt = false` dans `config.toml`) ; secret `TMDB_READ_TOKEN`.
 
-Tables prévues dans les phases suivantes : `vetoes`, `shows_progress`, `betrayals` (ciné) ; `alphabet_letters`, `alphabet_photos`.
+Tables prévues en phase 5 : `vetoes`, `shows_progress`, `betrayals` (ciné).
+Passeport : aucune table, tout est calculé depuis les films vus (`matches.done_at` + `payload`). Nouveau badge = une ligne dans `BADGES` (`src/features/passeport/passport.ts`).
 
 ## Sécurité (non négociable)
 
@@ -91,7 +99,8 @@ Tables prévues dans les phases suivantes : `vetoes`, `shows_progress`, `betraya
 npm run dev                                   # serveur local (http://localhost:5173)
 npm run build                                 # vérif TypeScript + build dans dist/
 npm run preview                               # sert le build (pour tester la PWA)
-npm test                                      # tests de la logique pure (dates, argent ; Node sans dépendance)
+npm test                                      # tests de la logique pure (dates, argent, passeport ; Node sans dépendance)
+node scripts/simplify-map.mjs                 # régénérer la carte du monde allégée (rarement)
 npx supabase link --project-ref <ref>         # relier le dossier au projet Supabase (une fois)
 npx supabase db push --remote                          # appliquer les migrations sur le projet distant
 npx supabase gen types typescript --remote > src/lib/database.types.ts
@@ -113,6 +122,8 @@ npx wrangler deploy                           # déploiement manuel (normalement
 - Alphabet des dates : le créateur du couple organise la lettre A, puis alternance.
 - Liste cadeaux = liste **secrète** (`owner_id`) : chacun peut en avoir plusieurs ; l'app propose « Idées cadeaux pour [l'autre] » si on n'en a pas.
 - Dépenses : répartition 50/50 par défaut, ou part de l'autre en % ou en € ; seule la part due est stockée (`owed_cents`). « On est quittes » enregistre un remboursement du solde exact.
+- Alphabet : l'événement d'agenda créé depuis une lettre suit son titre et sa date quand on enregistre la lettre (pas l'inverse). Couverture = première photo.
+- Passeport : les suggestions remplissent les filtres du swipe (pays ou décennie, mieux notés d'abord), retirables dans « Filtres ».
 - URL : Worker `appadeux` sur le sous-domaine gratuit `workers.dev` pour commencer ; domaine perso possible plus tard sans changer le code.
 
 ## Direction visuelle — « Guimauve » (80 %) + « Riso » (20 %)

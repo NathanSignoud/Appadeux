@@ -63,12 +63,19 @@ async function handle(body: Record<string, unknown>) {
       const genres = ints(body.genres)
       const providers = ints(body.providers)
       const page = int(body.page, 1, 500) ?? 1
+      // Passeport : films d'un pays ou d'une décennie qui nous manque → les mieux notés, avec assez de votes
+      const country = typeof body.country === 'string' && /^[A-Z]{2}$/.test(body.country) ? body.country : undefined
+      const decade = int(body.decade, 1900, 2030)
+      const passport = Boolean(country || decade)
       const list = await tmdb('/discover/movie', {
         page,
         region: 'FR',
-        sort_by: 'popularity.desc',
+        sort_by: passport ? 'vote_average.desc' : 'popularity.desc',
         include_adult: 'false',
-        'vote_count.gte': 150,
+        'vote_count.gte': passport ? 300 : 150,
+        with_origin_country: country,
+        'primary_release_date.gte': decade ? `${decade - (decade % 10)}-01-01` : undefined,
+        'primary_release_date.lte': decade ? `${decade - (decade % 10) + 9}-12-31` : undefined,
         with_genres: genres.join('|'), // | = OU
         'with_runtime.lte': int(body.maxRuntime, 30, 400),
         with_watch_providers: providers.join('|'),

@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { Sheet } from '../../components/Sheet'
 import { Button, Chip } from '../../components/ui'
 import { GENRES, MOODS } from '../../lib/tmdb'
-import { DEFAULT_FILTERS, type CineFilters } from './filters'
+import { countryName, DEFAULT_FILTERS, type CineFilters } from './filters'
 
 const DURATIONS = [
   { value: null, label: 'Peu importe' },
@@ -30,6 +30,23 @@ function Form({ filters, onApply, onClose, hasProviders }: Props) {
 
   return (
     <div className="flex max-h-[70dvh] flex-col gap-5 overflow-y-auto">
+      {(draft.country || draft.decade) && (
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-2 font-semibold">Pour le passeport</legend>
+          <div className="flex flex-wrap gap-2">
+            {draft.country && (
+              <Chip pressed onClick={() => set({ country: null })} aria-label={`Retirer ${countryName(draft.country)}`}>
+                {countryName(draft.country)} ✕
+              </Chip>
+            )}
+            {draft.decade && (
+              <Chip pressed onClick={() => set({ decade: null })} aria-label={`Retirer les années ${draft.decade}`}>
+                Années {draft.decade} ✕
+              </Chip>
+            )}
+          </div>
+        </fieldset>
+      )}
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 font-semibold">Humeur</legend>
         <div className="flex flex-wrap gap-2">

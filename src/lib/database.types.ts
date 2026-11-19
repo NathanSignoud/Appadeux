@@ -39,6 +39,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      alphabet_letters: {
+        Row: {
+          couple_id: string
+          created_at: string
+          date_on: string | null
+          description: string | null
+          event_id: string | null
+          id: string
+          letter: string
+          organizer_id: string | null
+          status: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          couple_id?: string
+          created_at?: string
+          date_on?: string | null
+          description?: string | null
+          event_id?: string | null
+          id?: string
+          letter: string
+          organizer_id?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          couple_id?: string
+          created_at?: string
+          date_on?: string | null
+          description?: string | null
+          event_id?: string | null
+          id?: string
+          letter?: string
+          organizer_id?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alphabet_letters_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alphabet_letters_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alphabet_photos: {
+        Row: {
+          couple_id: string
+          created_at: string
+          created_by: string
+          id: string
+          letter_id: string
+          path: string
+        }
+        Insert: {
+          couple_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          letter_id: string
+          path: string
+        }
+        Update: {
+          couple_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          letter_id?: string
+          path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alphabet_photos_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alphabet_photos_letter_id_fkey"
+            columns: ["letter_id"]
+            isOneToOne: false
+            referencedRelation: "alphabet_letters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       couples: {
         Row: {
           created_at: string

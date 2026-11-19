@@ -26,7 +26,7 @@ async function call<T>(body: Record<string, unknown>): Promise<T> {
 }
 
 export const tmdb = {
-  discover: (p: { page: number; genres: number[]; maxRuntime: number | null; providers: number[] }) =>
+  discover: (p: { page: number; genres: number[]; maxRuntime: number | null; providers: number[]; country?: string | null; decade?: number | null }) =>
     call<{ movies: Movie[]; totalPages: number }>({ op: 'discover', ...p }),
   search: (query: string) => call<{ results: SearchResult[] }>({ op: 'search', query }),
   movie: (id: number) => call<Movie>({ op: 'movie', id }),
