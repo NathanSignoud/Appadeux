@@ -17,7 +17,7 @@ Interface **en français**, **mobile d'abord**. Cahier des charges complet : [PR
 ```
 src/
   main.tsx            point d'entrée
-  App.tsx             routes + garde d'accès (connexion → couple → app)
+  App.tsx             routes + garde d'accès (connexion → couple → app) ; pages chargées à la demande (lazy), sauf l'accueil
   index.css           Tailwind + tokens de design (@theme)
   lib/
     supabase.ts       client Supabase typé
@@ -92,7 +92,9 @@ Passeport : aucune table, tout est calculé depuis les films vus (`matches.done_
 
 ## Sécurité (non négociable)
 
-- Tout est derrière une connexion. Les inscriptions Supabase sont **fermées** une fois les deux comptes créés.
+- Tout est derrière une connexion. Les inscriptions Supabase sont **fermées** (l'écran de connexion ne propose plus de créer un compte).
+- Aucune fonction SQL n'est exécutable par `anon` ; tout accès anonyme (tables, RPC, Storage, Edge Function, inscription) est refusé — vérifié lors de l'audit final du 19/11/2026.
+- En-têtes HTTP (`public/_headers`) : CSP stricte (origines autorisées : le site, Supabase, `image.tmdb.org` ; script inline de thème autorisé par empreinte, vérifiée par `tests/csp.test.ts`), `frame-ancestors 'none'`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS.
 - **RLS activée sur chaque table**, politiques basées sur `couple_id = my_couple_id()`. Les éléments secrets (liste cadeaux) sont filtrés aussi sur `auth.uid()` **dans la politique**, pas seulement dans l'UI.
 - Aucune clé secrète dans le front ni dans Git. Seules `VITE_SUPABASE_URL` et `VITE_SUPABASE_PUBLISHABLE_KEY` vont dans le front. Le jeton TMDB est un secret d'Edge Function. Ces deux valeurs publiques sont versionnées dans `.env.production` ; les vraies clés secrètes ne vont jamais dans un fichier `.env.*` versionné.
 - Photos dans un bucket **privé**, servies par URLs signées.
@@ -103,7 +105,7 @@ Passeport : aucune table, tout est calculé depuis les films vus (`matches.done_
 npm run dev                                   # serveur local (http://localhost:5173)
 npm run build                                 # vérif TypeScript + build dans dist/
 npm run preview                               # sert le build (pour tester la PWA)
-npm test                                      # tests de la logique pure (dates, argent, passeport, ciné ; Node sans dépendance)
+npm test                                      # tests de la logique pure (dates, argent, passeport, ciné) + empreinte CSP ; Node sans dépendance
 node scripts/simplify-map.mjs                 # régénérer la carte du monde allégée (rarement)
 npx supabase link --project-ref <ref>         # relier le dossier au projet Supabase (une fois)
 npx supabase db push --remote                          # appliquer les migrations sur le projet distant

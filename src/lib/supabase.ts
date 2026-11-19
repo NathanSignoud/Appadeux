@@ -16,8 +16,6 @@ const messages: Record<string, string> = {
   couple_full: 'Ce couple est déjà complet.',
   already_in_couple: 'Ton compte fait déjà partie d’un couple.',
   'Invalid login credentials': 'Email ou mot de passe incorrect.',
-  'User already registered': 'Un compte existe déjà avec cet email. Connecte-toi.',
-  'Signups not allowed for this instance': 'Les inscriptions sont fermées.',
   'New password should be different from the old password.': 'Le nouveau mot de passe doit être différent de l’ancien.',
   veto_used: 'Tu as déjà utilisé ton veto cette semaine. Il revient lundi.',
   match_not_found: 'Ce film n’est plus dans la watchlist.',

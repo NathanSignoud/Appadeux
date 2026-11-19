@@ -1,29 +1,31 @@
-import { lazy, Suspense } from 'react'
+import { lazy, type ComponentType } from 'react'
 import { Route, Routes } from 'react-router'
 import { Layout } from './components/Layout'
 import { Button } from './components/ui'
 import { Accueil } from './features/accueil/Accueil'
-import { Alphabet } from './features/alphabet/Alphabet'
-import { LettreDetail } from './features/alphabet/LettreDetail'
 import { Connexion } from './features/auth/Connexion'
-import { Calendrier } from './features/calendrier/Calendrier'
-import { MonthView } from './features/calendrier/MonthView'
-import { UpcomingView } from './features/calendrier/UpcomingView'
-import { Cine } from './features/cine/Cine'
-import { CineSwipe } from './features/cine/CineSwipe'
-import { Vus } from './features/cine/Vus'
-import { Series } from './features/cine/Series'
-import { Watchlist } from './features/cine/Watchlist'
 import { Bienvenue } from './features/couple/Bienvenue'
-import { Depenses } from './features/depenses/Depenses'
-import { ListeDetail } from './features/listes/ListeDetail'
-import { Listes } from './features/listes/Listes'
-import { Parametres } from './features/plus/Parametres'
-import { Plus } from './features/plus/Plus'
 import { useAuth } from './lib/auth'
 
-// La carte du monde pèse ~40 Ko compressés : chargée seulement en ouvrant le passeport
-const Passeport = lazy(() => import('./features/passeport/Passeport').then((m) => ({ default: m.Passeport })))
+// Chaque page est chargée à la demande (l'accueil, lui, est dans le paquet principal) : premier affichage plus rapide sur mobile.
+// Le passeport embarque la carte du monde (~40 Ko compressés).
+const page = <K extends string>(load: () => Promise<Record<K, ComponentType>>, name: K) => lazy(() => load().then((m) => ({ default: m[name] })))
+const Alphabet = page(() => import('./features/alphabet/Alphabet'), 'Alphabet')
+const LettreDetail = page(() => import('./features/alphabet/LettreDetail'), 'LettreDetail')
+const Calendrier = page(() => import('./features/calendrier/Calendrier'), 'Calendrier')
+const MonthView = page(() => import('./features/calendrier/MonthView'), 'MonthView')
+const UpcomingView = page(() => import('./features/calendrier/UpcomingView'), 'UpcomingView')
+const Cine = page(() => import('./features/cine/Cine'), 'Cine')
+const CineSwipe = page(() => import('./features/cine/CineSwipe'), 'CineSwipe')
+const Vus = page(() => import('./features/cine/Vus'), 'Vus')
+const Series = page(() => import('./features/cine/Series'), 'Series')
+const Watchlist = page(() => import('./features/cine/Watchlist'), 'Watchlist')
+const Depenses = page(() => import('./features/depenses/Depenses'), 'Depenses')
+const ListeDetail = page(() => import('./features/listes/ListeDetail'), 'ListeDetail')
+const Listes = page(() => import('./features/listes/Listes'), 'Listes')
+const Parametres = page(() => import('./features/plus/Parametres'), 'Parametres')
+const Plus = page(() => import('./features/plus/Plus'), 'Plus')
+const Passeport = page(() => import('./features/passeport/Passeport'), 'Passeport')
 
 export default function App() {
   const { loading, error, session, me, partner, refresh } = useAuth()
@@ -61,14 +63,7 @@ export default function App() {
         <Route path="depenses" element={<Depenses />} />
         <Route path="alphabet" element={<Alphabet />} />
         <Route path="alphabet/:letter" element={<LettreDetail />} />
-        <Route
-          path="passeport"
-          element={
-            <Suspense fallback={null}>
-              <Passeport />
-            </Suspense>
-          }
-        />
+        <Route path="passeport" element={<Passeport />} />
         <Route path="parametres" element={<Parametres />} />
         <Route path="*" element={<Accueil />} />
       </Route>

@@ -10,9 +10,10 @@ description: Builder et déployer l'app Nous sur Cloudflare Workers (static asse
 Un `git push` sur `main` suffit : Cloudflare (Workers Builds) récupère le code, lance `npm run build` puis `npx wrangler deploy`.
 
 Avant de pousser :
-1. `npm run build` passe sans erreur en local.
+1. `npm test` et `npm run build` passent sans erreur en local (le test `csp` vérifie l'empreinte du script inline de `index.html`).
+   Nouvelle origine externe (API, images, police…) ? L'ajouter à la CSP de `public/_headers`, sinon le navigateur la bloque.
 2. Les migrations SQL sont appliquées : `npx supabase db push --remote` (Cloudflare ne touche pas à Supabase).
-3. Les Edge Functions modifiées sont déployées : `npx supabase functions deploy <nom> --use-api`.
+3. Les Edge Functions modifiées sont déployées : `npx supabase functions deploy <nom> --use-api --remote`.
 4. `npm run preview` : vérifier l'app servie depuis `dist/`.
 
 ## Réglages Cloudflare (déjà faits une fois)
@@ -23,6 +24,8 @@ Avant de pousser :
   - **Variables** : aucune à configurer. `VITE_SUPABASE_URL` et `VITE_SUPABASE_PUBLISHABLE_KEY` (publiques) sont dans `.env.production`, versionné.
     Cloudflare refuse les variables d'exécution sur un Worker 100 % statique, et Vite les lit au build de toute façon.
 - Fallback SPA : `assets.not_found_handling = "single-page-application"` dans `wrangler.jsonc`.
+- En-têtes de sécurité (CSP, anti-iframe, nosniff…) : `public/_headers`, copié dans `dist/` et appliqué par Cloudflare. Tester en local avec `npx wrangler dev` (qui l'applique aussi).
+- Vérifier après déploiement : `curl -sI https://appadeux.signoudnat.workers.dev/ | grep -i content-security`.
 - Supabase → Authentication → URL Configuration : mettre l'URL du site dans *Site URL*.
 
 ## Vérifier la PWA
@@ -35,6 +38,6 @@ Avant de pousser :
 
 ## En cas de problème
 
-- Page blanche en production : vérifier `.env.production` (noms exacts, préfixe `VITE_`) puis les logs de build Cloudflare.
+- Page blanche en production : vérifier `.env.production` (noms exacts, préfixe `VITE_`) puis les logs de build Cloudflare, puis la console (erreur « Content Security Policy » → `public/_headers`).
 - Connexion impossible : vérifier *Site URL* et que l'URL Supabase correspond au bon projet.
 - Vieille version affichée : fermer complètement la PWA et la rouvrir (le service worker se met à jour).

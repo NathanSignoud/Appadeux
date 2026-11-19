@@ -1,0 +1,10 @@
+# En-têtes de sécurité appliqués par Cloudflare (Workers static assets) à toutes les pages.
+# CSP : seuls le site, Supabase (API, Realtime, photos signées) et les affiches TMDB sont autorisés.
+# Le hash sha256 autorise le script de thème inline de index.html : tests/csp.test.ts vérifie qu'il est à jour.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-R5SwB7azzo+1+i179eIKUOAnvV9GB2Qp3JXvvBXEMKU='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://image.tmdb.org https://nqadgywyzvxqagpfjdrd.supabase.co; connect-src 'self' https://nqadgywyzvxqagpfjdrd.supabase.co wss://nqadgywyzvxqagpfjdrd.supabase.co; font-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Strict-Transport-Security: max-age=31536000

@@ -2,26 +2,20 @@ import { useState, type FormEvent } from 'react'
 import { Button, Field, Message, Overprint } from '../../components/ui'
 import { frenchError, supabase } from '../../lib/supabase'
 
+// Connexion seulement : les inscriptions sont fermées côté Supabase (les deux comptes existent).
 export function Connexion() {
-  const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
-  const [message, setMessage] = useState<{ kind: 'error' | 'info'; text: string } | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   async function submit(e: FormEvent) {
     e.preventDefault()
     setBusy(true)
-    setMessage(null)
-    const { data, error } =
-      mode === 'login' ? await supabase.auth.signInWithPassword({ email, password }) : await supabase.auth.signUp({ email, password })
+    setError(null)
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
     setBusy(false)
-    if (error) return setMessage({ kind: 'error', text: frenchError(error) })
-    // Si la confirmation par email est activée dans Supabase, pas de session tant que le lien n'est pas cliqué
-    if (mode === 'signup' && !data.session) {
-      setMessage({ kind: 'info', text: 'Compte créé. Clique sur le lien reçu par email, puis reviens te connecter ici.' })
-      setMode('login')
-    }
+    if (error) setError(frenchError(error))
   }
 
   return (
@@ -36,28 +30,16 @@ export function Connexion() {
         <Field
           label="Mot de passe"
           type="password"
-          autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-          minLength={8}
+          autoComplete="current-password"
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        {message && <Message kind={message.kind}>{message.text}</Message>}
+        {error && <Message kind="error">{error}</Message>}
         <Button type="submit" disabled={busy}>
-          {mode === 'login' ? 'Se connecter' : 'Créer mon compte'}
+          Se connecter
         </Button>
       </form>
-
-      <button
-        type="button"
-        onClick={() => {
-          setMode(mode === 'login' ? 'signup' : 'login')
-          setMessage(null)
-        }}
-        className="min-h-12 font-medium text-prune-doux underline underline-offset-4"
-      >
-        {mode === 'login' ? 'Première fois ? Créer un compte' : "J'ai déjà un compte"}
-      </button>
     </main>
   )
 }
