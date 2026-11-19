@@ -113,6 +113,126 @@ export type Database = {
           },
         ]
       }
+      expenses: {
+        Row: {
+          amount_cents: number
+          category: string
+          couple_id: string
+          created_at: string
+          created_by: string
+          id: string
+          label: string
+          owed_cents: number
+          paid_by: string
+          spent_on: string
+        }
+        Insert: {
+          amount_cents: number
+          category?: string
+          couple_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          label: string
+          owed_cents: number
+          paid_by: string
+          spent_on?: string
+        }
+        Update: {
+          amount_cents?: number
+          category?: string
+          couple_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          label?: string
+          owed_cents?: number
+          paid_by?: string
+          spent_on?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      list_items: {
+        Row: {
+          created_at: string
+          created_by: string
+          done: boolean
+          id: string
+          list_id: string
+          position: number
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          done?: boolean
+          id?: string
+          list_id: string
+          position?: number
+          text: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          done?: boolean
+          id?: string
+          list_id?: string
+          position?: number
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "list_items_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lists: {
+        Row: {
+          couple_id: string
+          created_at: string
+          created_by: string
+          id: string
+          owner_id: string | null
+          title: string
+        }
+        Insert: {
+          couple_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          owner_id?: string | null
+          title: string
+        }
+        Update: {
+          couple_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          owner_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lists_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matches: {
         Row: {
           added_by: string | null
@@ -224,6 +344,44 @@ export type Database = {
             columns: ["match_id"]
             isOneToOne: false
             referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      settlements: {
+        Row: {
+          amount_cents: number
+          couple_id: string
+          created_at: string
+          created_by: string
+          from_user: string
+          id: string
+          to_user: string
+        }
+        Insert: {
+          amount_cents: number
+          couple_id?: string
+          created_at?: string
+          created_by?: string
+          from_user: string
+          id?: string
+          to_user: string
+        }
+        Update: {
+          amount_cents?: number
+          couple_id?: string
+          created_at?: string
+          created_by?: string
+          from_user?: string
+          id?: string
+          to_user?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settlements_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
             referencedColumns: ["id"]
           },
         ]

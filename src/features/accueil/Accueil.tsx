@@ -4,6 +4,9 @@ import { useAuth } from '../../lib/auth'
 import { coversDay, daysUntil, endOf, formatWhen, untilPhrase } from '../../lib/dates'
 import { useEvents, type CalEvent } from '../calendrier/hooks'
 import { lastSeenMatches, useMovieMatches } from '../cine/hooks'
+import { useBalance } from '../depenses/hooks'
+import { formatEuros } from '../depenses/money'
+import { remaining, useLists } from '../listes/hooks'
 
 const countdownText = (n: number) => (n === 0 ? 'Aujourd’hui !' : n === 1 ? 'Demain !' : `J-${n}`)
 
@@ -11,6 +14,8 @@ export function Accueil() {
   const { me, partner, inkOf } = useAuth()
   const { data: events } = useEvents()
   const { data: matches } = useMovieMatches()
+  const { cents: owed, loading: balanceLoading } = useBalance(me?.user_id ?? '')
+  const { data: lists } = useLists()
   if (!me || !partner) return null
 
   const now = new Date()
@@ -20,6 +25,7 @@ export function Accueil() {
   const next = events.find((e) => e.kind !== 'absence' && endOf(e) > now)
   const seen = lastSeenMatches()
   const newMatches = matches.filter((m) => m.source === 'match' && !m.done_at && m.created_at > seen).length
+  const todo = lists.filter((l) => !l.owner_id).reduce((n, l) => n + remaining(l), 0)
   const nameOf = (e: CalEvent) => (e.created_by === me.user_id ? null : partner.display_name)
 
   return (
@@ -95,11 +101,36 @@ export function Accueil() {
             </>
           )}
         </Link>
-        <Link to="/listes" className="flex min-h-20 flex-col justify-end rounded-[28px] bg-beurre p-4 active:scale-[0.97]">
-          <span className="text-lg font-semibold">Listes</span>
+        <Link to="/depenses" className="flex min-h-28 flex-col gap-1 rounded-[28px] bg-peche p-4 active:scale-[0.97]">
+          <span className="text-lg font-semibold">Dépenses</span>
+          {!balanceLoading && (
+            <span className="mt-auto leading-tight">
+              {owed === 0 ? (
+                <span className="text-prune-doux">Vous êtes quittes</span>
+              ) : (
+                <>
+                  <span className="block text-2xl font-bold">{formatEuros(Math.abs(owed))}</span>
+                  {owed > 0 ? `${partner.display_name} te doit` : `tu dois à ${partner.display_name}`}
+                </>
+              )}
+            </span>
+          )}
         </Link>
-        <Link to="/alphabet" className="flex min-h-20 flex-col justify-end rounded-[10px_28px_28px_28px] bg-peche p-4 active:scale-[0.97]">
-          <span className="text-lg font-semibold">Alphabet</span>
+        <Link to="/listes" className="flex min-h-28 flex-col gap-1 rounded-[10px_28px_28px_28px] bg-beurre p-4 active:scale-[0.97]">
+          <span className="text-lg font-semibold">Listes</span>
+          <span className="mt-auto leading-tight">
+            {todo > 0 ? (
+              <>
+                <span className="block text-2xl font-bold">{todo}</span>
+                {todo > 1 ? 'choses à faire' : 'chose à faire'}
+              </>
+            ) : (
+              <span className="text-prune-doux">Rien en attente</span>
+            )}
+          </span>
+        </Link>
+        <Link to="/alphabet" className="col-span-2 flex min-h-16 items-center rounded-[28px_28px_10px_28px] bg-white px-5 py-4 active:scale-[0.97]">
+          <span className="text-lg font-semibold">Alphabet des dates</span>
         </Link>
       </div>
     </>

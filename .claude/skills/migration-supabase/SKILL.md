@@ -44,6 +44,8 @@ alter publication supabase_realtime add table public.ma_table;
 - [ ] `enable row level security` sur **chaque** table, sans exception.
 - [ ] Chaque politique est `to authenticated` et filtre sur `couple_id = public.my_couple_id()`.
 - [ ] Élément secret (liste cadeaux…) : ajouter `and owner_id = auth.uid()` dans **using** de select/update/delete et dans **with check**. L'UI ne suffit jamais.
+  Modèle : `supabase/migrations/20261119180000_listes.sql` (une table enfant reprend la règle via `exists` sur la table parente). Test : `supabase/tests/listes.sql`.
+  Le Realtime diffuse un DELETE à tous les abonnés avec seulement l'id : ne jamais mettre d'information dans une clé primaire.
 - [ ] Le `with check` empêche de déplacer une ligne vers un autre couple.
 - [ ] Fonction `security definer` : toujours `set search_path = ''`, noms qualifiés (`public.x`), vérifier `auth.uid()`, puis `revoke execute ... from public, anon` et `grant execute ... to authenticated`.
 - [ ] Colonnes qu'on ne doit pas modifier : `revoke update` sur la table puis `grant update (col1, col2)`.

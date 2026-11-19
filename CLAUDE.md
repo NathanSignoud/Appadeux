@@ -32,7 +32,9 @@ src/
   features/swipe/     moteur de swipe GÉNÉRIQUE (SwipeDeck, SwipeSource, MatchOverlay)
   features/cine/      Cine (sous-onglets) → CineSwipe, Watchlist, Vus ; movieSource branche les films sur le moteur
   features/calendrier/ Calendrier (sous-onglets, EventSheet partagé via Outlet context) → MonthView, UpcomingView
-  features/accueil/   tableau de bord : compte à rebours épinglé, absences en cours, prochain événement, nouveaux matchs
+  features/listes/    Listes (aperçu + listes secrètes) → ListeDetail (cocher, modifier, glisser pour réordonner), ListSheet
+  features/depenses/  Depenses (solde + « On est quittes ») → Historique, Recap ; ExpenseSheet ; money.ts = logique d'argent pure (testée)
+  features/accueil/   tableau de bord : compte à rebours, absences, prochain événement, nouveaux matchs, solde, choses à faire
 public/logo.svg       source des icônes PWA (réglages : pwa-assets.config.ts)
 supabase/
   migrations/         SQL versionné (voir skill migration-supabase)
@@ -61,15 +63,20 @@ wrangler.jsonc        config Cloudflare (fallback SPA)
 | `swipes` | PK (`user_id`, `kind`, `item_id`), `liked`, `payload jsonb` (instantané de la carte) | **chacun ne voit que les siens** ; insert/update des siens |
 | `matches` | `kind`, `item_id` (unique par couple), `payload`, `source` (`match` \| `manual`), `added_by`, `done_at` (= « Vu ») | lecture/suppression couple ; insert seulement `source = 'manual'` ; update seulement `done_at` |
 | `ratings` | PK (`match_id`, `user_id`), `stars` 1–5, `comment` | lecture couple ; écriture des siennes ; update seulement `stars`, `comment`, `updated_at` |
+| `lists` | `title`, `owner_id` (**null = partagée**, sinon liste secrète de cette personne) | partagée : tout le couple ; secrète : **son propriétaire seulement** (lecture, modif, suppression, filtré dans la politique) ; seul `title` est modifiable |
+| `list_items` | `list_id`, `text`, `done`, `position` (double, ordre manuel : milieu des deux voisins ; défaut = horodatage → en fin de liste) | suit la visibilité de sa liste ; update de `text`, `done`, `position` |
+| `expenses` | `label`, `amount_cents`, `owed_cents` (part due par celui qui **n'a pas** payé), `category` (liste fixe), `spent_on` (date), `paid_by` | tout le couple ; `paid_by` doit être membre du couple ; `owed_cents ≤ amount_cents` |
+| `settlements` | `from_user` a remboursé `amount_cents` à `to_user` (« On est quittes ») | lecture, ajout, suppression (= annuler) par le couple ; pas de modification |
 | `events` | `title`, `kind` (`together` | `solo` | `absence`), `starts_at`, `ends_at`, `all_day`, `location`, `note`, `pinned` (compte à rebours), `created_by` = la personne concernée (couleur) | tout le couple lit/modifie/supprime ; insert seulement à son nom ; `couple_id` et `created_by` non modifiables ; une absence est forcément `all_day` |
 
 Fonctions : `my_couple_id()` (base de toutes les politiques), `create_couple(nom)`, `join_couple(code, nom)`, trigger `handle_swipe_match()` (crée le match quand les deux ont dit oui ; seul moyen d'obtenir `source = 'match'`).
 Pour les films (`kind = 'movie'`), `payload` = type `Movie` de `src/lib/tmdb.ts` (durée, genres, pays, langue, collection, plateformes FR) : la watchlist, le passeport et le Wrapped le lisent sans rappeler TMDB.
-Realtime : `members`, `matches`, `ratings`, `events`.
+Realtime : `members`, `matches`, `ratings`, `events`, `lists`, `list_items`, `expenses`, `settlements`. Le Realtime applique la politique de lecture à chaque abonné (les lignes secrètes ne partent pas chez l'autre) ; seule exception, un DELETE est diffusé à tous avec **uniquement l'id** de la ligne (aucun contenu).
+Solde : `balance()` de `src/features/depenses/money.ts` (somme des `owed_cents` ± remboursements), testé par `tests/depenses.test.ts`.
 Journée entière : `starts_at` = minuit du premier jour, `ends_at` = minuit du **dernier jour inclus** (heure locale).
 Edge Function `tmdb` : opérations `discover`, `search`, `movie`, `providers` ; vérifie la session (JWKS ES256, `verify_jwt = false` dans `config.toml`) ; secret `TMDB_READ_TOKEN`.
 
-Tables prévues dans les phases suivantes : `vetoes`, `shows_progress`, `betrayals` (ciné) ; `lists`, `list_items` ; `expenses`, `settlements` ; `alphabet_letters`, `alphabet_photos`.
+Tables prévues dans les phases suivantes : `vetoes`, `shows_progress`, `betrayals` (ciné) ; `alphabet_letters`, `alphabet_photos`.
 
 ## Sécurité (non négociable)
 
@@ -84,7 +91,7 @@ Tables prévues dans les phases suivantes : `vetoes`, `shows_progress`, `betraya
 npm run dev                                   # serveur local (http://localhost:5173)
 npm run build                                 # vérif TypeScript + build dans dist/
 npm run preview                               # sert le build (pour tester la PWA)
-npm test                                      # tests de la logique pure (tests/*.test.ts, Node sans dépendance)
+npm test                                      # tests de la logique pure (dates, argent ; Node sans dépendance)
 npx supabase link --project-ref <ref>         # relier le dossier au projet Supabase (une fois)
 npx supabase db push --remote                          # appliquer les migrations sur le projet distant
 npx supabase gen types typescript --remote > src/lib/database.types.ts
@@ -104,6 +111,8 @@ npx wrangler deploy                           # déploiement manuel (normalement
 
 - Connexion par email + mot de passe (un lien magique s'ouvrirait dans Safari, hors de la PWA sur iOS).
 - Alphabet des dates : le créateur du couple organise la lettre A, puis alternance.
+- Liste cadeaux = liste **secrète** (`owner_id`) : chacun peut en avoir plusieurs ; l'app propose « Idées cadeaux pour [l'autre] » si on n'en a pas.
+- Dépenses : répartition 50/50 par défaut, ou part de l'autre en % ou en € ; seule la part due est stockée (`owed_cents`). « On est quittes » enregistre un remboursement du solde exact.
 - URL : Worker `appadeux` sur le sous-domaine gratuit `workers.dev` pour commencer ; domaine perso possible plus tard sans changer le code.
 
 ## Direction visuelle — « Guimauve » (80 %) + « Riso » (20 %)

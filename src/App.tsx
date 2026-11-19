@@ -12,6 +12,9 @@ import { CineSwipe } from './features/cine/CineSwipe'
 import { Vus } from './features/cine/Vus'
 import { Watchlist } from './features/cine/Watchlist'
 import { Bienvenue } from './features/couple/Bienvenue'
+import { Depenses } from './features/depenses/Depenses'
+import { ListeDetail } from './features/listes/ListeDetail'
+import { Listes } from './features/listes/Listes'
 import { Parametres } from './features/plus/Parametres'
 import { Plus } from './features/plus/Plus'
 import { useAuth } from './lib/auth'
@@ -45,9 +48,10 @@ export default function App() {
           <Route index element={<MonthView />} />
           <Route path="a-venir" element={<UpcomingView />} />
         </Route>
-        <Route path="listes" element={<Soon title="Listes" phase={3} />} />
+        <Route path="listes" element={<Listes />} />
+        <Route path="listes/:id" element={<ListeDetail />} />
         <Route path="plus" element={<Plus />} />
-        <Route path="depenses" element={<Soon title="Dépenses" phase={3} />} />
+        <Route path="depenses" element={<Depenses />} />
         <Route path="alphabet" element={<Soon title="Alphabet des dates" phase={4} />} />
         <Route path="passeport" element={<Soon title="Passeport ciné" phase={4} />} />
         <Route path="parametres" element={<Parametres />} />
