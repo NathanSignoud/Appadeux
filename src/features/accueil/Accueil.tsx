@@ -8,6 +8,11 @@ import { LETTERS, statusOf, useLetters } from '../alphabet/hooks'
 import { useBalance } from '../depenses/hooks'
 import { formatEuros } from '../depenses/money'
 import { remaining, useLists } from '../listes/hooks'
+import { useCoupons } from '../bons/hooks'
+import { thirstShort } from '../jardin/garden'
+import { Plant } from '../jardin/Plant'
+import { useGarden } from '../jardin/useGarden'
+import { useBets } from '../paris/hooks'
 
 const countdownText = (n: number) => (n === 0 ? 'Aujourd’hui !' : n === 1 ? 'Demain !' : `J-${n}`)
 
@@ -18,6 +23,9 @@ export function Accueil() {
   const { cents: owed, loading: balanceLoading } = useBalance(me?.user_id ?? '')
   const { data: lists } = useLists()
   const { data: letters } = useLetters()
+  const { state: plant } = useGarden()
+  const { data: bets } = useBets()
+  const { data: coupons } = useCoupons()
   if (!me || !partner) return null
 
   const now = new Date()
@@ -29,6 +37,9 @@ export function Accueil() {
   const newMatches = matches.filter((m) => m.source === 'match' && !m.done_at && m.created_at > seen).length
   const lettersDone = letters.filter((l) => l.status === 'done').length
   const nextLetter = LETTERS.find((l) => statusOf(letters.find((r) => r.letter === l)) !== 'done')
+  // « À toi de jouer » : ce qui attend une réponse de ma part
+  const betsToAnswer = bets.filter((b) => b.status === 'proposed' && b.created_by !== me.user_id).length
+  const couponsToScratch = coupons.filter((c) => c.giver_id !== me.user_id && !c.scratched_at).length
   const todo = lists.filter((l) => !l.owner_id).reduce((n, l) => n + remaining(l), 0)
   const nameOf = (e: CalEvent) => (e.created_by === me.user_id ? null : partner.display_name)
 
@@ -73,6 +84,23 @@ export function Accueil() {
           </p>
         )
       })}
+
+      {(betsToAnswer > 0 || couponsToScratch > 0) && (
+        <div className="flex flex-col gap-2">
+          {couponsToScratch > 0 && (
+            <Link to="/bons" className="flex min-h-12 items-center gap-3 rounded-full bg-beurre px-5 py-2 text-lg font-medium active:scale-[0.98]">
+              <span aria-hidden="true" className="size-3 shrink-0 rounded-full bg-violet" />
+              {couponsToScratch > 1 ? `${couponsToScratch} bons à gratter` : 'Un bon à gratter'} de {partner.display_name}
+            </Link>
+          )}
+          {betsToAnswer > 0 && (
+            <Link to="/paris" className="flex min-h-12 items-center gap-3 rounded-full bg-menthe px-5 py-2 text-lg font-medium active:scale-[0.98]">
+              <span aria-hidden="true" className="size-3 shrink-0 rounded-full bg-violet" />
+              {partner.display_name} te lance {betsToAnswer > 1 ? `${betsToAnswer} paris` : 'un pari'}
+            </Link>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <Link to="/calendrier/a-venir" className="flex min-h-32 flex-col gap-1 rounded-[28px_28px_28px_10px] bg-white p-4 active:scale-[0.97]">
@@ -131,6 +159,13 @@ export function Accueil() {
             ) : (
               <span className="text-prune-doux">Rien en attente</span>
             )}
+          </span>
+        </Link>
+        <Link to="/jardin" className="col-span-2 flex items-center gap-3 rounded-[28px_10px_28px_28px] bg-white py-2 pr-5 pl-2 active:scale-[0.97]">
+          <Plant state={plant} className="h-24 w-20 shrink-0" />
+          <span className="flex flex-col">
+            <span className="text-lg font-semibold">Notre jardin</span>
+            <span className="leading-tight text-prune-doux">{plant.thirst ? thirstShort[plant.thirst] : plant.label}</span>
           </span>
         </Link>
         <Link to="/alphabet" className="col-span-2 flex min-h-16 flex-col gap-2 rounded-[28px_28px_10px_28px] bg-white px-5 py-4 active:scale-[0.97]">

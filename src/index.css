@@ -79,6 +79,15 @@ dialog[open]::backdrop {
   animation: fade-in 200ms ease-out;
 }
 
+/* Bocal secoué */
+@keyframes shake {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(-9deg); }
+  40% { transform: rotate(8deg); }
+  60% { transform: rotate(-6deg); }
+  80% { transform: rotate(4deg); }
+}
+
 /* Case cochée qui rebondit */
 .check-pop:checked {
   animation: pop 280ms ease-out;

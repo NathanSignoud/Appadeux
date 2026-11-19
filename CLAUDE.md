@@ -40,6 +40,10 @@ src/
   features/alphabet/  Alphabet (grille A→Z, progression) → LettreDetail (thème, date, agenda, photos, idées), Fete (26/26), ideas.ts
   features/passeport/ Passeport (chargé à la demande) : carte, décennies, badges, suggestions ; passport.ts = logique pure (testée) ;
                       worldMap.ts GÉNÉRÉ par scripts/simplify-map.mjs depuis @svg-maps/world (CC BY 4.0)
+  features/jardin/    Jardin + Plant (SVG) : plante calculée sans table (garden.ts = logique pure testée, useGarden rassemble les sources)
+  features/bocal/     Bocal à mots doux (pioche via draw_love_note)
+  features/paris/     Paris et gages (registre des gages dus)
+  features/bons/      Bons à gratter (ScratchCard = canvas à gratter, CouponCard = ticket)
   features/accueil/   tableau de bord : compte à rebours, absences, prochain événement, nouveaux matchs, solde, choses à faire
 public/logo.svg       source des icônes PWA (réglages : pwa-assets.config.ts)
 supabase/
@@ -78,11 +82,15 @@ wrangler.jsonc        config Cloudflare (fallback SPA)
 | `settlements` | `from_user` a remboursé `amount_cents` à `to_user` (« On est quittes ») | lecture, ajout, suppression (= annuler) par le couple ; pas de modification |
 | `alphabet_letters` | `letter` A–Z (unique par couple, ligne créée au 1er enregistrement), `status` (`todo` \| `planned` \| `done`), `organizer_id` (null = alternance : A pour le créateur), `title` (« B comme … »), `description`, `date_on`, `event_id` (événement « À deux » créé depuis la lettre) | tout le couple lit/crée/modifie ; organisateur = membre ; événement = du couple ; pas de suppression |
 | `alphabet_photos` | `letter_id`, `path` (`<couple_id>/<letter_id>/<uuid>.jpg` dans le bucket `alphabet`) ; couverture = la première | lecture, ajout (chemin dans le dossier du couple et de la lettre), suppression par le couple |
+| `love_notes` | `author_id`, `body`, `drawn_at` (null = dans le bocal) | l'auteur voit ses mots ; **le destinataire ne voit un mot qu'une fois pioché** ; ajout à son nom ; retrait avant pioche ; pas d'update (pioche via `draw_love_note()`) |
+| `bets` | `claim` (« je parie que… »), `stake` (gage), `status` (`proposed` \| `accepted` \| `refused`), `winner_id`, `settled_at`, `honored_at` | tout le couple lit ; trigger `check_bet_transition` : seul l'autre accepte/refuse, gagnant une seule fois (membre), seul le gagnant marque « honoré » ; retrait tant que `proposed` |
+| `coupons` | `giver_id` (destinataire = l'autre), `title`, `details`, `look`, `scratched_at`, `used_at` | tout le couple lit ; **seul le destinataire** gratte et utilise ; celui qui offre peut reprendre tant que non utilisé |
 | `events` | `title`, `kind` (`together` | `solo` | `absence`), `starts_at`, `ends_at`, `all_day`, `location`, `note`, `pinned` (compte à rebours), `created_by` = la personne concernée (couleur) | tout le couple lit/modifie/supprime ; insert seulement à son nom ; `couple_id` et `created_by` non modifiables ; une absence est forcément `all_day` |
 
-Fonctions : `my_couple_id()` (base de toutes les politiques), `create_couple(nom)`, `join_couple(code, nom)`, trigger `handle_swipe_match()` (crée le match quand les deux ont dit oui ; seul moyen d'obtenir `source = 'match'`), `use_veto(match_id)` (consomme le veto de la semaine et retire le match ; erreur `veto_used`), `current_week_start()`.
+Fonctions : `my_couple_id()` (base de toutes les politiques), `create_couple(nom)`, `join_couple(code, nom)`, trigger `handle_swipe_match()` (crée le match quand les deux ont dit oui ; seul moyen d'obtenir `source = 'match'`), `use_veto(match_id)` (consomme le veto de la semaine et retire le match ; erreur `veto_used`), `current_week_start()`, `love_notes_status()` (mots qui m'attendent, pioche du jour faite ?), `draw_love_note()` (1 par jour, heure de Paris ; erreurs `already_drawn_today`, `jar_empty`).
 Pour les films (`kind = 'movie'`), `payload` = type `Movie` de `src/lib/tmdb.ts` (durée, genres, pays, langue, collection, plateformes FR) : la watchlist, le passeport et le Wrapped le lisent sans rappeler TMDB.
-Realtime : `members`, `matches`, `ratings`, `events`, `lists`, `list_items`, `expenses`, `settlements`, `alphabet_letters`, `alphabet_photos`, `vetoes`, `shows`, `betrayals`.
+Realtime : `members`, `matches`, `ratings`, `events`, `lists`, `list_items`, `expenses`, `settlements`, `alphabet_letters`, `alphabet_photos`, `vetoes`, `shows`, `betrayals`, `love_notes`, `bets`, `coupons`.
+Jardin : aucune table. Points = films vus ×1, lettres faites ×3, séries terminées ×2, gages honorés, mots piochés, bons utilisés ×1 ; soif après 7 jours sans activité partagée, fanée après 21 (`src/features/jardin/garden.ts`).
 Storage : bucket **privé** `alphabet` (5 Mo max, JPEG/WebP) ; politiques sur `storage.objects` : premier dossier = `my_couple_id()`. Photos compressées côté téléphone (1600 px, JPEG 82 %), affichées par URLs signées (1 h). Le Realtime applique la politique de lecture à chaque abonné (les lignes secrètes ne partent pas chez l'autre) ; seule exception, un DELETE est diffusé à tous avec **uniquement l'id** de la ligne (aucun contenu).
 Solde : `balance()` de `src/features/depenses/money.ts` (somme des `owed_cents` ± remboursements), testé par `tests/depenses.test.ts`.
 Journée entière : `starts_at` = minuit du premier jour, `ends_at` = minuit du **dernier jour inclus** (heure locale).
@@ -105,7 +113,7 @@ Passeport : aucune table, tout est calculé depuis les films vus (`matches.done_
 npm run dev                                   # serveur local (http://localhost:5173)
 npm run build                                 # vérif TypeScript + build dans dist/
 npm run preview                               # sert le build (pour tester la PWA)
-npm test                                      # tests de la logique pure (dates, argent, passeport, ciné) + empreinte CSP ; Node sans dépendance
+npm test                                      # tests de la logique pure (dates, argent, passeport, ciné, jardin) + empreinte CSP ; Node sans dépendance
 node scripts/simplify-map.mjs                 # régénérer la carte du monde allégée (rarement)
 npx supabase link --project-ref <ref>         # relier le dossier au projet Supabase (une fois)
 npx supabase db push --remote                          # appliquer les migrations sur le projet distant
@@ -133,6 +141,8 @@ npx wrangler deploy                           # déploiement manuel (normalement
 - Veto : 1 par personne et par semaine (lundi → dimanche, heure de Paris), garanti par une contrainte unique ; seul moyen de retirer un vrai match.
 - Taux d'accord = moyenne de (1 − écart des notes / 4) sur les films notés par les deux. Wrapped = films dont le « Vu » tombe dans l'année.
 - Mode sombre : « Auto » (suit le téléphone) par défaut, ou Clair / Sombre dans Paramètres, mémorisé par téléphone.
+- Bocal : une pioche par jour, uniquement les mots de l'autre ; le secret avant pioche est garanti par la RLS. Un mot glissé par l'autre n'arrive pas en direct (la RLS me le cache) : le compte se met à jour à l'ouverture.
+- Paris : n'importe lequel des deux désigne le gagnant (confiance), seul le gagnant confirme le gage honoré.
 - URL : Worker `appadeux` sur le sous-domaine gratuit `workers.dev` pour commencer ; domaine perso possible plus tard sans changer le code.
 
 ## Direction visuelle — « Guimauve » (80 %) + « Riso » (20 %)

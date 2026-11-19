@@ -1,6 +1,10 @@
 import { Link } from 'react-router'
 
 const pages = [
+  { to: '/jardin', titre: 'Notre jardin', texte: 'La plante qui pousse avec vos moments à deux' },
+  { to: '/bocal', titre: 'Le bocal à mots doux', texte: 'Un mot glissé, un mot pioché par jour' },
+  { to: '/paris', titre: 'Paris et gages', texte: 'Qui a gagné, qui doit un massage' },
+  { to: '/bons', titre: 'Bons à gratter', texte: 'Petit-déj au lit, joker dispute…' },
   { to: '/depenses', titre: 'Dépenses', texte: 'Qui doit combien à qui' },
   { to: '/alphabet', titre: 'Alphabet des dates', texte: 'De A à Z, chacun son tour' },
   { to: '/passeport', titre: 'Passeport ciné', texte: 'Les pays et les décennies de nos films' },

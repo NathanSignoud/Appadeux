@@ -186,6 +186,53 @@ export type Database = {
           },
         ]
       }
+      bets: {
+        Row: {
+          claim: string
+          couple_id: string
+          created_at: string
+          created_by: string
+          honored_at: string | null
+          id: string
+          settled_at: string | null
+          stake: string
+          status: string
+          winner_id: string | null
+        }
+        Insert: {
+          claim: string
+          couple_id?: string
+          created_at?: string
+          created_by?: string
+          honored_at?: string | null
+          id?: string
+          settled_at?: string | null
+          stake: string
+          status?: string
+          winner_id?: string | null
+        }
+        Update: {
+          claim?: string
+          couple_id?: string
+          created_at?: string
+          created_by?: string
+          honored_at?: string | null
+          id?: string
+          settled_at?: string | null
+          stake?: string
+          status?: string
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bets_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       couples: {
         Row: {
           created_at: string
@@ -206,6 +253,50 @@ export type Database = {
           streaming_providers?: number[]
         }
         Relationships: []
+      }
+      coupons: {
+        Row: {
+          couple_id: string
+          created_at: string
+          details: string | null
+          giver_id: string
+          id: string
+          look: string
+          scratched_at: string | null
+          title: string
+          used_at: string | null
+        }
+        Insert: {
+          couple_id?: string
+          created_at?: string
+          details?: string | null
+          giver_id?: string
+          id?: string
+          look?: string
+          scratched_at?: string | null
+          title: string
+          used_at?: string | null
+        }
+        Update: {
+          couple_id?: string
+          created_at?: string
+          details?: string | null
+          giver_id?: string
+          id?: string
+          look?: string
+          scratched_at?: string | null
+          title?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupons_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       events: {
         Row: {
@@ -373,6 +464,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "lists_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      love_notes: {
+        Row: {
+          author_id: string
+          body: string
+          couple_id: string
+          created_at: string
+          drawn_at: string | null
+          id: string
+        }
+        Insert: {
+          author_id?: string
+          body: string
+          couple_id?: string
+          created_at?: string
+          drawn_at?: string | null
+          id?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          couple_id?: string
+          created_at?: string
+          drawn_at?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "love_notes_couple_id_fkey"
             columns: ["couple_id"]
             isOneToOne: false
             referencedRelation: "couples"
@@ -663,11 +789,29 @@ export type Database = {
     Functions: {
       create_couple: { Args: { p_display_name: string }; Returns: string }
       current_week_start: { Args: never; Returns: string }
+      draw_love_note: {
+        Args: never
+        Returns: {
+          author_id: string
+          body: string
+          couple_id: string
+          created_at: string
+          drawn_at: string | null
+          id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "love_notes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       generate_invite_code: { Args: never; Returns: string }
       join_couple: {
         Args: { p_code: string; p_display_name: string }
         Returns: string
       }
+      love_notes_status: { Args: never; Returns: Json }
       my_couple_id: { Args: never; Returns: string }
       use_veto: { Args: { p_match_id: string }; Returns: undefined }
     }

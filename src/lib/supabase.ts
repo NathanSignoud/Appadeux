@@ -19,6 +19,10 @@ const messages: Record<string, string> = {
   'New password should be different from the old password.': 'Le nouveau mot de passe doit être différent de l’ancien.',
   veto_used: 'Tu as déjà utilisé ton veto cette semaine. Il revient lundi.',
   match_not_found: 'Ce film n’est plus dans la watchlist.',
+  already_drawn_today: 'Tu as déjà pioché un mot aujourd’hui. Le bocal t’attend demain.',
+  jar_empty: 'Le bocal est vide pour l’instant.',
+  bet_transition: 'Ce pari a déjà avancé : recharge la page.',
+  bet_not_yours: 'C’est à l’autre de répondre à ton pari.',
 }
 
 export function frenchError(error: { message: string }): string {

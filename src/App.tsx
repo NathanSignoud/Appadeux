@@ -26,6 +26,10 @@ const Listes = page(() => import('./features/listes/Listes'), 'Listes')
 const Parametres = page(() => import('./features/plus/Parametres'), 'Parametres')
 const Plus = page(() => import('./features/plus/Plus'), 'Plus')
 const Passeport = page(() => import('./features/passeport/Passeport'), 'Passeport')
+const Jardin = page(() => import('./features/jardin/Jardin'), 'Jardin')
+const Bocal = page(() => import('./features/bocal/Bocal'), 'Bocal')
+const Paris = page(() => import('./features/paris/Paris'), 'Paris')
+const Bons = page(() => import('./features/bons/Bons'), 'Bons')
 
 export default function App() {
   const { loading, error, session, me, partner, refresh } = useAuth()
@@ -64,6 +68,10 @@ export default function App() {
         <Route path="alphabet" element={<Alphabet />} />
         <Route path="alphabet/:letter" element={<LettreDetail />} />
         <Route path="passeport" element={<Passeport />} />
+        <Route path="jardin" element={<Jardin />} />
+        <Route path="bocal" element={<Bocal />} />
+        <Route path="paris" element={<Paris />} />
+        <Route path="bons" element={<Bons />} />
         <Route path="parametres" element={<Parametres />} />
         <Route path="*" element={<Accueil />} />
       </Route>
