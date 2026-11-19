@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Avatar, Button, Chip, Field, Message } from '../../components/ui'
 import { useAuth } from '../../lib/auth'
 import { frenchError, supabase } from '../../lib/supabase'
+import { getThemePref, setThemePref, type ThemePref } from '../../lib/theme'
 import { imageUrl, tmdb, type Provider } from '../../lib/tmdb'
 
 export function Parametres() {
@@ -44,6 +45,8 @@ export function Parametres() {
         ))}
       </section>
 
+      <Apparence />
+
       <Abonnements />
 
       <MotDePasse />
@@ -58,7 +61,7 @@ export function Parametres() {
         <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer" className="underline underline-offset-2">
           TMDB
         </a>
-        . Cette app utilise l’API TMDB mais n’est ni approuvée ni certifiée par TMDB.
+        . Cette app utilise l’API TMDB mais n’est ni approuvée ni certifiée par TMDB. Carte du passeport : svg-maps de Victor Cazanave (CC BY 4.0).
       </p>
     </>
   )
@@ -131,6 +134,37 @@ function Abonnements() {
           <Chip key={p.id} pressed={providers.includes(p.id)} onClick={() => toggle(p.id)} className="flex items-center gap-2 pl-1.5 [&:not([aria-pressed=true])]:bg-lilas">
             <img src={imageUrl(p.logoPath, 'w92')!} alt="" className="size-8 rounded-full" />
             {p.name}
+          </Chip>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+const THEMES: [ThemePref, string][] = [
+  ['auto', 'Auto'],
+  ['light', 'Clair'],
+  ['dark', 'Sombre'],
+]
+
+/** Thème propre à chaque téléphone ; « Auto » suit le réglage du téléphone. */
+function Apparence() {
+  const [pref, setPref] = useState(getThemePref)
+  return (
+    <section className="flex flex-col gap-3 rounded-[28px] bg-white p-5">
+      <h2 className="text-lg font-semibold">Apparence</h2>
+      <div className="flex gap-2">
+        {THEMES.map(([value, label]) => (
+          <Chip
+            key={value}
+            pressed={pref === value}
+            onClick={() => {
+              setPref(value)
+              setThemePref(value)
+            }}
+            className="flex-1 [&:not([aria-pressed=true])]:bg-lilas"
+          >
+            {label}
           </Chip>
         ))}
       </div>

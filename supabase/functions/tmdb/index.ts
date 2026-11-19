@@ -104,6 +104,35 @@ async function handle(body: Record<string, unknown>) {
       if (!id) throw new Error('id invalide')
       return movie(id)
     }
+    case 'searchTv': {
+      const query = typeof body.query === 'string' ? body.query.trim().slice(0, 100) : ''
+      if (!query) return { results: [] }
+      const list = await tmdb('/search/tv', { query, include_adult: 'false' })
+      return {
+        results: list.results.slice(0, 12).map((r: { id: number; name: string; first_air_date?: string; poster_path: string | null }) => ({
+          id: r.id,
+          title: r.name,
+          year: r.first_air_date ? Number(r.first_air_date.slice(0, 4)) : null,
+          posterPath: r.poster_path,
+        })),
+      }
+    }
+    case 'tv': {
+      // Série : saisons et nombre d'épisodes (pour passer tout seul à la saison suivante). Saison 0 = bonus, ignorée.
+      const id = int(body.id, 1, 100_000_000)
+      if (!id) throw new Error('id invalide')
+      const t = await tmdb(`/tv/${id}`)
+      return {
+        id: t.id,
+        name: t.name,
+        year: t.first_air_date ? Number(t.first_air_date.slice(0, 4)) : null,
+        posterPath: t.poster_path,
+        seasons: (t.seasons ?? [])
+          .filter((s: { season_number: number; episode_count: number }) => s.season_number > 0 && s.episode_count > 0)
+          .map((s: { season_number: number; episode_count: number }) => ({ number: s.season_number, episodes: s.episode_count })),
+        ended: t.status === 'Ended' || t.status === 'Canceled',
+      }
+    }
     case 'providers': {
       const list = await tmdb('/watch/providers/movie', { watch_region: 'FR' })
       return {

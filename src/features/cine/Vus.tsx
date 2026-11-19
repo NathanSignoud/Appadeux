@@ -1,28 +1,55 @@
 import { useState } from 'react'
-import { Avatar, Message, Stars } from '../../components/ui'
+import { Avatar, EmptyState, Message, Overprint, Stars } from '../../components/ui'
 import { useAuth } from '../../lib/auth'
-import { useMovieMatches, useRatings, type MovieMatch } from './hooks'
+import { useBetrayals, useMovieMatches, useRatings, type MovieMatch } from './hooks'
 import { MovieRow } from './MovieRow'
 import { RatingSheet } from './RatingSheet'
+import { agreementLabel, agreementRate, ratingPairs, wrappedStats, wrappedYears } from './stats'
+import { Wrapped } from './Wrapped'
 
 export function Vus() {
   const { me, partner, inkOf } = useAuth()
   const { data, loading, error } = useMovieMatches()
   const { data: ratings } = useRatings()
+  const { data: betrayals } = useBetrayals()
   const [rating, setRating] = useState<MovieMatch | null>(null)
+  const [wrappedYear, setWrappedYear] = useState<number | null>(null)
   if (!me || !partner) return null
 
   const watched = data.filter((m) => m.done_at).sort((a, b) => b.done_at!.localeCompare(a.done_at!))
   const ratingOf = (matchId: string, userId: string) => ratings.find((r) => r.match_id === matchId && r.user_id === userId)
 
+  const rate = agreementRate(ratingPairs(ratings, me.user_id, partner.user_id))
+  const years = wrappedYears(data)
+
   return (
     <>
       {error && <Message kind="error">{error}</Message>}
 
-      {!loading && watched.length === 0 && (
-        <div className="blob grid h-48 place-items-center bg-white px-10 text-center">
-          <p className="text-lg text-prune-doux">Aucun film vu ensemble pour l’instant. Appuyez sur « Vu » dans la watchlist après une séance.</p>
+      {rate !== null && (
+        <Overprint className="h-36">
+          <p className="text-5xl font-bold">{rate} %</p>
+          <p className="px-8 text-lg font-medium">d’accord sur vos notes. {agreementLabel(rate)}</p>
+        </Overprint>
+      )}
+
+      {years.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {years.slice(0, 3).map((y) => (
+            <button
+              key={y}
+              type="button"
+              onClick={() => setWrappedYear(y)}
+              className="flex min-h-14 flex-1 items-center justify-center rounded-[22px_22px_22px_8px] bg-beurre px-4 text-lg font-semibold active:scale-[0.97]"
+            >
+              Votre année ciné {y}
+            </button>
+          ))}
         </div>
+      )}
+
+      {!loading && watched.length === 0 && (
+        <EmptyState>Aucun film vu ensemble pour l’instant. Appuyez sur « Vu » dans la watchlist après une séance.</EmptyState>
       )}
 
       <ul className="flex flex-col gap-3">
@@ -50,6 +77,12 @@ export function Vus() {
         })}
       </ul>
 
+      {wrappedYear && (
+        <Wrapped
+          stats={wrappedStats(wrappedYear, data, ratings, betrayals.map((b) => b.created_at), me.user_id, partner.user_id)}
+          onClose={() => setWrappedYear(null)}
+        />
+      )}
       <RatingSheet match={rating} mine={rating ? ratingOf(rating.id, me.user_id) : undefined} onClose={() => setRating(null)} />
     </>
   )

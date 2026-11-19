@@ -8,8 +8,8 @@ export function KindMark({ event, className = '' }: { event: CalEvent; className
   if (event.kind === 'together') {
     return (
       <span aria-hidden="true" className={`relative isolate block w-3 shrink-0 ${className}`}>
-        <span className="absolute inset-y-0 left-0 w-2 rounded-full bg-encre-a mix-blend-multiply" />
-        <span className="absolute inset-y-0 right-0 w-2 rounded-full bg-encre-b mix-blend-multiply" />
+        <span className="absolute inset-y-0 left-0 w-2 rounded-full bg-encre-a mix-blend-multiply dark:mix-blend-screen" />
+        <span className="absolute inset-y-0 right-0 w-2 rounded-full bg-encre-b mix-blend-multiply dark:mix-blend-screen" />
       </span>
     )
   }

@@ -18,7 +18,7 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
       // clic sur le fond (hors du contenu) = fermer
       onClick={(e) => e.target === ref.current && onClose()}
       aria-label={title}
-      className="m-0 mt-auto max-h-[88dvh] w-full max-w-none rounded-t-[32px] bg-lilas p-0 text-prune backdrop:bg-prune/40 sm:mx-auto sm:max-w-lg"
+      className="sheet m-0 mt-auto max-h-[88dvh] w-full max-w-none rounded-t-[32px] bg-lilas p-0 text-prune backdrop:bg-prune/40 sm:mx-auto sm:max-w-lg"
     >
       <div className="flex flex-col gap-4 px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div aria-hidden="true" className="mx-auto h-1.5 w-12 rounded-full bg-lilas-fonce" />

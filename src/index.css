@@ -21,6 +21,27 @@
   --color-erreur: #b3261e;
 }
 
+/* Mode sombre : data-theme sur <html>, posé avant l'affichage par le script de index.html (voir src/lib/theme.ts).
+   Astuce : « white » = la couleur des surfaces (cartes, champs) et du texte sur les boutons foncés,
+   donc en sombre elle devient une surface sombre, et le bouton prune devient clair. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+:root {
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-lilas: #1c1529;
+  --color-lilas-fonce: #33284a;
+  --color-white: #2a2139;
+  --color-prune: #f3ecff;
+  --color-prune-doux: #bcaed6;
+  --color-peche: #6e4334;
+  --color-menthe: #2c5a48;
+  --color-beurre: #5f5226;
+  --color-erreur: #ff8a80;
+}
+
 html,
 body {
   background: var(--color-lilas);
@@ -42,6 +63,25 @@ body {
   0% { transform: scale(0.6); opacity: 0; }
   70% { transform: scale(1.06); opacity: 1; }
   100% { transform: scale(1); }
+}
+
+/* Les panneaux montent du bas, le fond s'assombrit en fondu (en réponse au geste d'ouverture) */
+@keyframes sheet-up {
+  from { transform: translateY(48px); opacity: 0; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+dialog.sheet[open] {
+  animation: sheet-up 280ms cubic-bezier(0.2, 0.9, 0.3, 1.05);
+}
+dialog[open]::backdrop {
+  animation: fade-in 200ms ease-out;
+}
+
+/* Case cochée qui rebondit */
+.check-pop:checked {
+  animation: pop 280ms ease-out;
 }
 
 :focus-visible {

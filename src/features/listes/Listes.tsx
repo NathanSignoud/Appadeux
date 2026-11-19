@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { Message } from '../../components/ui'
+import { EmptyState, Message } from '../../components/ui'
 import { useAuth } from '../../lib/auth'
 import { frenchError, supabase } from '../../lib/supabase'
 import { remaining, useLists } from './hooks'
@@ -54,9 +54,15 @@ export function Listes() {
       {(error || createError) && <Message kind="error">{error ?? createError}</Message>}
 
       {!loading && shared.length === 0 && (
-        <button type="button" onClick={() => setSheetOpen(true)} className="blob grid h-40 place-items-center bg-white px-10 text-center active:scale-[0.98]">
-          <span className="text-lg text-prune-doux">Pas encore de liste à deux. Les courses, les choses à faire, les envies du week-end…</span>
-        </button>
+        <EmptyState
+          action={
+            <button type="button" onClick={() => setSheetOpen(true)} className="min-h-11 rounded-full bg-prune px-5 font-semibold text-white active:scale-95">
+              Créer une liste
+            </button>
+          }
+        >
+          Pas encore de liste à deux. Les courses, les choses à faire, les envies du week-end…
+        </EmptyState>
       )}
 
       <ul className="grid grid-cols-2 gap-3">

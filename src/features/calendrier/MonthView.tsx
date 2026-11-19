@@ -83,8 +83,8 @@ export function MonthView() {
                   {others.map((e) =>
                     e.kind === 'together' ? (
                       <span key={e.id} className="relative isolate h-1.5 w-2.5">
-                        <span className="absolute left-0 size-1.5 rounded-full bg-encre-a mix-blend-multiply" />
-                        <span className="absolute right-0 size-1.5 rounded-full bg-encre-b mix-blend-multiply" />
+                        <span className="absolute left-0 size-1.5 rounded-full bg-encre-a mix-blend-multiply dark:mix-blend-screen" />
+                        <span className="absolute right-0 size-1.5 rounded-full bg-encre-b mix-blend-multiply dark:mix-blend-screen" />
                       </span>
                     ) : (
                       <span key={e.id} className="size-1.5 rounded-full" style={{ background: inkVar(e) }} />

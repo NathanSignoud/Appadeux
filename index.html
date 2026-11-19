@@ -10,6 +10,21 @@
     <meta name="apple-mobile-web-app-title" content="Nous" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>Nous</title>
+    <!-- Thème posé avant le premier affichage (pas de flash blanc en mode sombre). Même logique que src/lib/theme.ts -->
+    <script>
+      ;(function () {
+        var mq = matchMedia('(prefers-color-scheme: dark)')
+        function apply() {
+          var pref = null
+          try { pref = localStorage.getItem('nous.theme') } catch (e) {}
+          var dark = pref === 'dark' || (pref !== 'light' && mq.matches)
+          document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+          document.querySelector('meta[name=theme-color]').content = dark ? '#1C1529' : '#EFEAFB'
+        }
+        apply()
+        mq.addEventListener('change', apply)
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

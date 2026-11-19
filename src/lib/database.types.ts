@@ -138,6 +138,54 @@ export type Database = {
           },
         ]
       }
+      betrayals: {
+        Row: {
+          couple_id: string
+          created_at: string
+          id: string
+          note: string | null
+          reported_by: string
+          show_id: string | null
+          show_name: string
+          traitor_id: string
+        }
+        Insert: {
+          couple_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          reported_by?: string
+          show_id?: string | null
+          show_name: string
+          traitor_id: string
+        }
+        Update: {
+          couple_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          reported_by?: string
+          show_id?: string | null
+          show_name?: string
+          traitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "betrayals_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "betrayals_show_id_fkey"
+            columns: ["show_id"]
+            isOneToOne: false
+            referencedRelation: "shows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       couples: {
         Row: {
           created_at: string
@@ -485,6 +533,53 @@ export type Database = {
           },
         ]
       }
+      shows: {
+        Row: {
+          added_by: string
+          couple_id: string
+          created_at: string
+          episode: number
+          finished: boolean
+          id: string
+          payload: Json
+          season: number
+          tmdb_id: number
+          updated_at: string
+        }
+        Insert: {
+          added_by?: string
+          couple_id?: string
+          created_at?: string
+          episode?: number
+          finished?: boolean
+          id?: string
+          payload: Json
+          season?: number
+          tmdb_id: number
+          updated_at?: string
+        }
+        Update: {
+          added_by?: string
+          couple_id?: string
+          created_at?: string
+          episode?: number
+          finished?: boolean
+          id?: string
+          payload?: Json
+          season?: number
+          tmdb_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shows_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       swipes: {
         Row: {
           couple_id: string
@@ -523,18 +618,58 @@ export type Database = {
           },
         ]
       }
+      vetoes: {
+        Row: {
+          couple_id: string
+          created_at: string
+          id: string
+          item_id: string
+          title: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          couple_id: string
+          created_at?: string
+          id?: string
+          item_id: string
+          title: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          couple_id?: string
+          created_at?: string
+          id?: string
+          item_id?: string
+          title?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vetoes_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       create_couple: { Args: { p_display_name: string }; Returns: string }
+      current_week_start: { Args: never; Returns: string }
       generate_invite_code: { Args: never; Returns: string }
       join_couple: {
         Args: { p_code: string; p_display_name: string }
         Returns: string
       }
       my_couple_id: { Args: never; Returns: string }
+      use_veto: { Args: { p_match_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

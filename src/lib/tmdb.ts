@@ -25,12 +25,17 @@ async function call<T>(body: Record<string, unknown>): Promise<T> {
   return data as T
 }
 
+/** Série : instantané stocké dans shows.payload. */
+export type Show = { id: number; name: string; year: number | null; posterPath: string | null; seasons: { number: number; episodes: number }[]; ended: boolean }
+
 export const tmdb = {
   discover: (p: { page: number; genres: number[]; maxRuntime: number | null; providers: number[]; country?: string | null; decade?: number | null }) =>
     call<{ movies: Movie[]; totalPages: number }>({ op: 'discover', ...p }),
   search: (query: string) => call<{ results: SearchResult[] }>({ op: 'search', query }),
   movie: (id: number) => call<Movie>({ op: 'movie', id }),
   providers: () => call<{ providers: Provider[] }>({ op: 'providers' }),
+  searchTv: (query: string) => call<{ results: SearchResult[] }>({ op: 'searchTv', query }),
+  tv: (id: number) => call<Show>({ op: 'tv', id }),
 }
 
 export const imageUrl = (path: string | null, size: 'w92' | 'w185' | 'w342' | 'w500' = 'w500') =>

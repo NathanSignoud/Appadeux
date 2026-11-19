@@ -69,10 +69,24 @@ export function Avatar({ name, ink }: { name: string; ink: 'a' | 'b' }) {
 export function Overprint({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <div className={`relative isolate ${className}`}>
-      <div aria-hidden="true" className="blob absolute inset-0 right-4 bottom-3 bg-encre-a mix-blend-multiply" />
-      <div aria-hidden="true" className="blob-alt absolute inset-0 top-3 left-4 bg-encre-b mix-blend-multiply" />
+      <div aria-hidden="true" className="blob absolute inset-0 right-4 bottom-3 bg-encre-a mix-blend-multiply dark:mix-blend-screen" />
+      <div aria-hidden="true" className="blob-alt absolute inset-0 top-3 left-4 bg-encre-b mix-blend-multiply dark:mix-blend-screen" />
       {/* texte blanc : lisible sur le violet de superposition (contraste 5,6:1) */}
       <div className="relative flex h-full flex-col items-center justify-center text-center text-white">{children}</div>
+    </div>
+  )
+}
+
+/** État vide : deux formes pastel qui se chevauchent, une phrase qui invite à agir, une action éventuelle. */
+export function EmptyState({ children, action }: { children: ReactNode; action?: ReactNode }) {
+  return (
+    <div className="flex flex-col items-center gap-4 rounded-[32px] bg-white px-8 py-8 text-center">
+      <span aria-hidden="true" className="relative isolate h-14 w-20">
+        <span className="blob absolute top-0 left-0 size-14 bg-peche mix-blend-multiply dark:mix-blend-screen" />
+        <span className="blob-alt absolute right-0 bottom-0 size-11 bg-menthe mix-blend-multiply dark:mix-blend-screen" />
+      </span>
+      <p className="text-lg text-prune-doux">{children}</p>
+      {action}
     </div>
   )
 }

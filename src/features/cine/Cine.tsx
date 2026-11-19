@@ -4,6 +4,7 @@ const tabs = [
   { to: '/cine', label: 'Swiper', end: true },
   { to: '/cine/watchlist', label: 'Watchlist', end: false },
   { to: '/cine/vus', label: 'Vus', end: false },
+  { to: '/cine/series', label: 'Séries', end: false },
 ]
 
 export function Cine() {
@@ -17,7 +18,7 @@ export function Cine() {
             to={t.to}
             end={t.end}
             className={({ isActive }) =>
-              `flex min-h-11 flex-1 items-center justify-center rounded-full font-semibold transition-colors ${isActive ? 'bg-lilas-fonce text-prune' : 'text-prune-doux'}`
+              `flex min-h-11 flex-1 items-center justify-center rounded-full px-1 text-[15px] font-semibold transition-colors ${isActive ? 'bg-lilas-fonce text-prune' : 'text-prune-doux'}`
             }
           >
             {t.label}

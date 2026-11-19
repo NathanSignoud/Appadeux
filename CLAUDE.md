@@ -25,13 +25,15 @@ src/
     auth.tsx          AuthProvider / useAuth : session, moi, l'autre, couple, abonnements
     useLiveQuery.ts   lecture Supabase + rechargement Realtime (pattern de données du projet)
     tmdb.ts           client de l'Edge Function tmdb, type Movie, genres, humeurs
+    theme.ts          thème clair / sombre / auto (data-theme sur <html>, posé avant affichage par index.html)
     photos.ts         compression des photos avant envoi + useSignedUrls (bucket privé, URLs signées en cache)
     dates.ts          dates locales (J-n, « jusqu’à jeudi », grille du mois…) — testé par tests/dates.test.ts
   components/         UI partagée (ui.tsx, Sheet, TabBar, Layout)
   features/<nom>/     une fonctionnalité = ses pages + ses hooks de données
                       (auth/Connexion, couple/Bienvenue, accueil/Accueil, plus/Plus + Parametres)
   features/swipe/     moteur de swipe GÉNÉRIQUE (SwipeDeck, SwipeSource, MatchOverlay)
-  features/cine/      Cine (sous-onglets) → CineSwipe, Watchlist, Vus ; movieSource branche les films sur le moteur
+  features/cine/      Cine (sous-onglets) → CineSwipe, Watchlist (roulette, veto), Vus (taux d'accord, Wrapped), Series (trahisons) ;
+                      movieSource branche les films sur le moteur ; stats.ts = calculs purs testés (accord, épisode suivant, Wrapped)
   features/calendrier/ Calendrier (sous-onglets, EventSheet partagé via Outlet context) → MonthView, UpcomingView
   features/listes/    Listes (aperçu + listes secrètes) → ListeDetail (cocher, modifier, glisser pour réordonner), ListSheet
   features/depenses/  Depenses (solde + « On est quittes ») → Historique, Recap ; ExpenseSheet ; money.ts = logique d'argent pure (testée)
@@ -65,7 +67,10 @@ wrangler.jsonc        config Cloudflare (fallback SPA)
 | `couples` | `id`, `invite_code` (null une fois complet), `streaming_providers int[]` (ids TMDB) | lecture : mon couple ; update de `streaming_providers` |
 | `members` | `user_id` (PK → un seul couple), `couple_id`, `display_name` | lecture : mon couple ; update de `display_name` sur ma ligne |
 | `swipes` | PK (`user_id`, `kind`, `item_id`), `liked`, `payload jsonb` (instantané de la carte) | **chacun ne voit que les siens** ; insert/update des siens |
-| `matches` | `kind`, `item_id` (unique par couple), `payload`, `source` (`match` \| `manual`), `added_by`, `done_at` (= « Vu ») | lecture/suppression couple ; insert seulement `source = 'manual'` ; update seulement `done_at` |
+| `matches` | `kind`, `item_id` (unique par couple), `payload`, `source` (`match` \| `manual`), `added_by`, `done_at` (= « Vu ») | lecture couple ; insert seulement `source = 'manual'` ; update seulement `done_at` ; **suppression seulement des ajouts manuels** (un vrai match ne part qu'avec le veto) |
+| `vetoes` | `user_id`, `week_start` (lundi, Paris), `item_id`, `title` ; **unique (`user_id`, `week_start`)** = 1 veto par semaine | lecture couple ; écriture uniquement via `use_veto()` |
+| `shows` | `tmdb_id` (unique par couple), `payload` (type `Show` : saisons et épisodes), `season`, `episode` (dernier vu, 0 = pas commencé), `finished` | tout le couple ; update de `season`, `episode`, `finished`, `updated_at` |
+| `betrayals` | `show_id` (null si série retirée), `show_name`, `traitor_id`, `reported_by` (= traître : aveu ; sinon dénonciation), `note` | lecture et ajout couple (traître = membre) ; suppression (« pardonner ») par celui qui a déclaré |
 | `ratings` | PK (`match_id`, `user_id`), `stars` 1–5, `comment` | lecture couple ; écriture des siennes ; update seulement `stars`, `comment`, `updated_at` |
 | `lists` | `title`, `owner_id` (**null = partagée**, sinon liste secrète de cette personne) | partagée : tout le couple ; secrète : **son propriétaire seulement** (lecture, modif, suppression, filtré dans la politique) ; seul `title` est modifiable |
 | `list_items` | `list_id`, `text`, `done`, `position` (double, ordre manuel : milieu des deux voisins ; défaut = horodatage → en fin de liste) | suit la visibilité de sa liste ; update de `text`, `done`, `position` |
@@ -75,15 +80,14 @@ wrangler.jsonc        config Cloudflare (fallback SPA)
 | `alphabet_photos` | `letter_id`, `path` (`<couple_id>/<letter_id>/<uuid>.jpg` dans le bucket `alphabet`) ; couverture = la première | lecture, ajout (chemin dans le dossier du couple et de la lettre), suppression par le couple |
 | `events` | `title`, `kind` (`together` | `solo` | `absence`), `starts_at`, `ends_at`, `all_day`, `location`, `note`, `pinned` (compte à rebours), `created_by` = la personne concernée (couleur) | tout le couple lit/modifie/supprime ; insert seulement à son nom ; `couple_id` et `created_by` non modifiables ; une absence est forcément `all_day` |
 
-Fonctions : `my_couple_id()` (base de toutes les politiques), `create_couple(nom)`, `join_couple(code, nom)`, trigger `handle_swipe_match()` (crée le match quand les deux ont dit oui ; seul moyen d'obtenir `source = 'match'`).
+Fonctions : `my_couple_id()` (base de toutes les politiques), `create_couple(nom)`, `join_couple(code, nom)`, trigger `handle_swipe_match()` (crée le match quand les deux ont dit oui ; seul moyen d'obtenir `source = 'match'`), `use_veto(match_id)` (consomme le veto de la semaine et retire le match ; erreur `veto_used`), `current_week_start()`.
 Pour les films (`kind = 'movie'`), `payload` = type `Movie` de `src/lib/tmdb.ts` (durée, genres, pays, langue, collection, plateformes FR) : la watchlist, le passeport et le Wrapped le lisent sans rappeler TMDB.
-Realtime : `members`, `matches`, `ratings`, `events`, `lists`, `list_items`, `expenses`, `settlements`, `alphabet_letters`, `alphabet_photos`.
+Realtime : `members`, `matches`, `ratings`, `events`, `lists`, `list_items`, `expenses`, `settlements`, `alphabet_letters`, `alphabet_photos`, `vetoes`, `shows`, `betrayals`.
 Storage : bucket **privé** `alphabet` (5 Mo max, JPEG/WebP) ; politiques sur `storage.objects` : premier dossier = `my_couple_id()`. Photos compressées côté téléphone (1600 px, JPEG 82 %), affichées par URLs signées (1 h). Le Realtime applique la politique de lecture à chaque abonné (les lignes secrètes ne partent pas chez l'autre) ; seule exception, un DELETE est diffusé à tous avec **uniquement l'id** de la ligne (aucun contenu).
 Solde : `balance()` de `src/features/depenses/money.ts` (somme des `owed_cents` ± remboursements), testé par `tests/depenses.test.ts`.
 Journée entière : `starts_at` = minuit du premier jour, `ends_at` = minuit du **dernier jour inclus** (heure locale).
-Edge Function `tmdb` : opérations `discover` (option `country` / `decade` pour le passeport → les mieux notés), `search`, `movie`, `providers` ; vérifie la session (JWKS ES256, `verify_jwt = false` dans `config.toml`) ; secret `TMDB_READ_TOKEN`.
+Edge Function `tmdb` : opérations `discover` (option `country` / `decade` pour le passeport → les mieux notés), `search`, `movie`, `providers`, `searchTv`, `tv` (saisons sans les bonus) ; vérifie la session (JWKS ES256, `verify_jwt = false` dans `config.toml`) ; secret `TMDB_READ_TOKEN`.
 
-Tables prévues en phase 5 : `vetoes`, `shows_progress`, `betrayals` (ciné).
 Passeport : aucune table, tout est calculé depuis les films vus (`matches.done_at` + `payload`). Nouveau badge = une ligne dans `BADGES` (`src/features/passeport/passport.ts`).
 
 ## Sécurité (non négociable)
@@ -99,7 +103,7 @@ Passeport : aucune table, tout est calculé depuis les films vus (`matches.done_
 npm run dev                                   # serveur local (http://localhost:5173)
 npm run build                                 # vérif TypeScript + build dans dist/
 npm run preview                               # sert le build (pour tester la PWA)
-npm test                                      # tests de la logique pure (dates, argent, passeport ; Node sans dépendance)
+npm test                                      # tests de la logique pure (dates, argent, passeport, ciné ; Node sans dépendance)
 node scripts/simplify-map.mjs                 # régénérer la carte du monde allégée (rarement)
 npx supabase link --project-ref <ref>         # relier le dossier au projet Supabase (une fois)
 npx supabase db push --remote                          # appliquer les migrations sur le projet distant
@@ -124,6 +128,9 @@ npx wrangler deploy                           # déploiement manuel (normalement
 - Dépenses : répartition 50/50 par défaut, ou part de l'autre en % ou en € ; seule la part due est stockée (`owed_cents`). « On est quittes » enregistre un remboursement du solde exact.
 - Alphabet : l'événement d'agenda créé depuis une lettre suit son titre et sa date quand on enregistre la lettre (pas l'inverse). Couverture = première photo.
 - Passeport : les suggestions remplissent les filtres du swipe (pays ou décennie, mieux notés d'abord), retirables dans « Filtres ».
+- Veto : 1 par personne et par semaine (lundi → dimanche, heure de Paris), garanti par une contrainte unique ; seul moyen de retirer un vrai match.
+- Taux d'accord = moyenne de (1 − écart des notes / 4) sur les films notés par les deux. Wrapped = films dont le « Vu » tombe dans l'année.
+- Mode sombre : « Auto » (suit le téléphone) par défaut, ou Clair / Sombre dans Paramètres, mémorisé par téléphone.
 - URL : Worker `appadeux` sur le sous-domaine gratuit `workers.dev` pour commencer ; domaine perso possible plus tard sans changer le code.
 
 ## Direction visuelle — « Guimauve » (80 %) + « Riso » (20 %)
@@ -135,4 +142,7 @@ Validée le 18/11/2026. Objectif : **cosy et très agréable à utiliser**. Maqu
 - **Touche riso** : chaque personne a son encre, `encre-a` (bleu, créateur du couple) et `encre-b` (rose). Ce qui se vit **à deux** est imprimé avec les deux encres superposées (`<Overprint>`, `mix-blend-multiply`). À utiliser avec parcimonie : un seul élément riso par écran. Encres = aplats et formes, jamais du texte.
 - **Typo** : Fredoka (variable, auto-hébergée via `@fontsource-variable/fredoka`), une seule famille. Titres `font-bold`, texte `font-medium`. Champs en `text-lg` minimum (pas de zoom iOS).
 - **Composants** : `src/components/ui.tsx` (`Button` primaire prune ou `soft` blanc, `Field`, `Message`, `Avatar`, `Overprint`). Barre d'onglets en pilule blanche flottante.
+- **Mode sombre** : les tokens sont redéfinis sous `:root[data-theme='dark']` (`src/index.css`). Astuce assumée : `white` = surface (cartes, champs) et texte des boutons foncés, donc il devient sombre ; `prune` devient clair. Ne jamais écrire de couleur en dur, sauf ce qui doit rester vraiment blanc ou noir (visionneuse photo : `#fff`, `bg-black`). Les encres utilisent `mix-blend-multiply dark:mix-blend-screen`.
+- **États vides** : `<EmptyState>` (deux formes pastel + phrase qui invite à agir + action éventuelle).
+- **Mouvement** : panneaux qui montent (`dialog.sheet`), cases qui rebondissent (`.check-pop`), `pop` pour les moments forts (match, roulette, fête, Wrapped).
 - **Règles** : zones tactiles ≥ 44 px (`min-h-12`), pas d'emoji dans l'UI (icônes SVG au trait), mouvement seulement en réponse à un geste (`active:scale-[0.97]`), `prefers-reduced-motion` respecté.

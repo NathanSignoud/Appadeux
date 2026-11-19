@@ -4,7 +4,7 @@ const pages = [
   { to: '/depenses', titre: 'Dépenses', texte: 'Qui doit combien à qui' },
   { to: '/alphabet', titre: 'Alphabet des dates', texte: 'De A à Z, chacun son tour' },
   { to: '/passeport', titre: 'Passeport ciné', texte: 'Les pays et les décennies de nos films' },
-  { to: '/parametres', titre: 'Paramètres', texte: 'Prénom, abonnements, déconnexion' },
+  { to: '/parametres', titre: 'Paramètres', texte: 'Prénom, apparence, abonnements, mot de passe' },
 ]
 
 export function Plus() {

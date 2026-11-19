@@ -25,8 +25,8 @@ export function MatchBadge() {
   return (
     <span className="flex items-center gap-1.5 text-sm font-semibold">
       <span aria-hidden="true" className="relative isolate h-3.5 w-5">
-        <span className="absolute left-0 size-3.5 rounded-full bg-encre-a mix-blend-multiply" />
-        <span className="absolute right-0 size-3.5 rounded-full bg-encre-b mix-blend-multiply" />
+        <span className="absolute left-0 size-3.5 rounded-full bg-encre-a mix-blend-multiply dark:mix-blend-screen" />
+        <span className="absolute right-0 size-3.5 rounded-full bg-encre-b mix-blend-multiply dark:mix-blend-screen" />
       </span>
       Match
     </span>

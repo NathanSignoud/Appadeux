@@ -121,7 +121,7 @@ function Detail({ id }: { id: string }) {
             checked={item.done}
             onChange={(e) => patch(item, { done: e.target.checked })}
             aria-label={item.text}
-            className="peer size-7 appearance-none rounded-full border-[3px] border-lilas-fonce bg-white transition-colors checked:border-violet checked:bg-violet"
+            className="check-pop peer size-7 appearance-none rounded-full border-[3px] border-lilas-fonce bg-white transition-colors checked:border-violet checked:bg-violet"
           />
           <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="pointer-events-none absolute size-4 opacity-0 peer-checked:opacity-100">
             <path d="m5 12.5 4.5 4.5L19 7.5" />

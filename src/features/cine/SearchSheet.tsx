@@ -1,20 +1,28 @@
 import { useEffect, useState } from 'react'
 import { Sheet } from '../../components/Sheet'
 import { Field, Message } from '../../components/ui'
-import { frenchError, supabase } from '../../lib/supabase'
-import { imageUrl, tmdb, type SearchResult } from '../../lib/tmdb'
+import { imageUrl, type SearchResult } from '../../lib/tmdb'
 
-type Props = { open: boolean; onClose: () => void; existing: Set<string> }
+/** Recherche TMDB (films ou séries). onPick renvoie un message d'erreur, ou null si c'est ajouté. */
+type Props = {
+  open: boolean
+  onClose: () => void
+  title: string
+  label: string
+  existing: Set<string>
+  search: (query: string) => Promise<{ results: SearchResult[] }>
+  onPick: (r: SearchResult) => Promise<string | null>
+}
 
 export function SearchSheet(props: Props) {
   return (
-    <Sheet open={props.open} onClose={props.onClose} title="Ajouter un film">
+    <Sheet open={props.open} onClose={props.onClose} title={props.title}>
       <Search {...props} />
     </Sheet>
   )
 }
 
-function Search({ onClose, existing }: Props) {
+function Search({ onClose, existing, label, search, onPick }: Props) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [adding, setAdding] = useState<number | null>(null)
@@ -27,8 +35,7 @@ function Search({ onClose, existing }: Props) {
     }
     let stale = false // une réponse lente d'une ancienne frappe ne doit pas écraser la nouvelle
     const timer = setTimeout(() => {
-      tmdb
-        .search(query)
+      search(query)
         .then((r) => !stale && setResults(r.results))
         .catch((e: Error) => !stale && setError(e.message))
     }, 350)
@@ -36,15 +43,14 @@ function Search({ onClose, existing }: Props) {
       stale = true
       clearTimeout(timer)
     }
-  }, [query])
+  }, [query, search])
 
   async function add(r: SearchResult) {
     setAdding(r.id)
     setError(null)
     try {
-      const movie = await tmdb.movie(r.id) // détails complets : durée, pays, plateformes
-      const { error } = await supabase.from('matches').insert({ kind: 'movie', item_id: String(r.id), payload: movie, source: 'manual' })
-      if (error) setError(error.code === '23505' ? 'Ce film est déjà dans votre liste.' : frenchError(error))
+      const message = await onPick(r)
+      if (message) setError(message)
       else onClose()
     } catch (e) {
       setError((e as Error).message)
@@ -55,7 +61,7 @@ function Search({ onClose, existing }: Props) {
 
   return (
     <div className="flex max-h-[70dvh] flex-col gap-4">
-      <Field label="Titre du film" type="search" autoFocus value={query} onChange={(e) => setQuery(e.target.value)} />
+      <Field label={label} type="search" autoFocus value={query} onChange={(e) => setQuery(e.target.value)} />
       {error && <Message kind="error">{error}</Message>}
       <ul className="flex flex-col gap-2 overflow-y-auto">
         {results.map((r) => {

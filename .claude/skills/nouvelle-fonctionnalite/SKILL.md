@@ -21,6 +21,7 @@ Cocher chaque étape dans l'ordre. Ne pas sauter la RLS ni le test mobile.
    - abonnement Realtime (`supabase.channel(...).on('postgres_changes', ...)`) avec désabonnement au démontage ;
    - écriture : mise à jour optimiste seulement si l'erreur est gérée (on revient en arrière + message).
 7. **UI** dans `src/features/<nom>/` : respecter la direction visuelle du `CLAUDE.md`, textes en français, états vide / chargement / erreur prévus, zones tactiles d'au moins 44 px.
+   État vide = `<EmptyState>`. Couleurs = tokens uniquement (jamais de hex en dur) : vérifier l'écran en mode sombre (Paramètres → Apparence → Sombre).
 8. **Route** dans `src/App.tsx` (et dans la barre d'onglets ou la page Plus si besoin).
 9. **Vérifier** : `npm run build` sans erreur, puis test manuel sur mobile (`npm run dev -- --host`, ouvrir l'IP locale sur le téléphone), avec **deux comptes** pour vérifier le temps réel et l'isolement des données.
 10. **CLAUDE.md** : mettre à jour le schéma, l'arborescence et les décisions prises.

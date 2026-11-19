@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Chip } from '../../components/ui'
+import { Chip, EmptyState } from '../../components/ui'
 import { useAuth } from '../../lib/auth'
 import { dayKey, formatDayShort, formatMonth } from '../../lib/dates'
 import { frenchError, supabase } from '../../lib/supabase'
@@ -49,9 +49,7 @@ export function Historique({
 
   if (!loading && expenses.length === 0 && settlements.length === 0) {
     return (
-      <div className="blob grid h-44 place-items-center bg-white px-10 text-center">
-        <p className="text-lg text-prune-doux">Aucune dépense pour l’instant. Ajoutez la prochaine course ou le prochain resto.</p>
-      </div>
+      <EmptyState>Aucune dépense pour l’instant. Ajoutez la prochaine course ou le prochain resto avec « Ajouter ».</EmptyState>
     )
   }
 

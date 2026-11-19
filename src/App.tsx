@@ -12,6 +12,7 @@ import { UpcomingView } from './features/calendrier/UpcomingView'
 import { Cine } from './features/cine/Cine'
 import { CineSwipe } from './features/cine/CineSwipe'
 import { Vus } from './features/cine/Vus'
+import { Series } from './features/cine/Series'
 import { Watchlist } from './features/cine/Watchlist'
 import { Bienvenue } from './features/couple/Bienvenue'
 import { Depenses } from './features/depenses/Depenses'
@@ -48,6 +49,7 @@ export default function App() {
           <Route index element={<CineSwipe />} />
           <Route path="watchlist" element={<Watchlist />} />
           <Route path="vus" element={<Vus />} />
+          <Route path="series" element={<Series />} />
         </Route>
         <Route path="calendrier" element={<Calendrier />}>
           <Route index element={<MonthView />} />

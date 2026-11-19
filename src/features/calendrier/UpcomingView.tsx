@@ -1,3 +1,4 @@
+import { EmptyState } from '../../components/ui'
 import { dayKey, dayLabel, endOf } from '../../lib/dates'
 import { useCalendar } from './Calendrier'
 import { EventItem } from './EventItem'
@@ -16,9 +17,7 @@ export function UpcomingView() {
 
   if (upcoming.length === 0) {
     return (
-      <div className="blob grid h-48 place-items-center bg-white px-10 text-center">
-        <p className="text-lg text-prune-doux">Rien de prévu pour l’instant. Ajoutez votre prochain moment à deux !</p>
-      </div>
+      <EmptyState>Rien de prévu pour l’instant. Ajoutez votre prochain moment à deux avec « Ajouter ».</EmptyState>
     )
   }
 
