@@ -30,6 +30,7 @@ const Jardin = page(() => import('./features/jardin/Jardin'), 'Jardin')
 const Bocal = page(() => import('./features/bocal/Bocal'), 'Bocal')
 const Paris = page(() => import('./features/paris/Paris'), 'Paris')
 const Bons = page(() => import('./features/bons/Bons'), 'Bons')
+const Roue = page(() => import('./features/roue/Roue'), 'Roue')
 
 export default function App() {
   const { loading, error, session, me, partner, refresh } = useAuth()
@@ -72,6 +73,7 @@ export default function App() {
         <Route path="bocal" element={<Bocal />} />
         <Route path="paris" element={<Paris />} />
         <Route path="bons" element={<Bons />} />
+        <Route path="roue" element={<Roue />} />
         <Route path="parametres" element={<Parametres />} />
         <Route path="*" element={<Accueil />} />
       </Route>

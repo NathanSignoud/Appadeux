@@ -13,7 +13,7 @@ const tabs = [
   { to: '/cine', label: 'Ciné', matches: ['/cine'], icon: icon(<><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M7 5v14M17 5v14M3 9.5h4M3 14.5h4M17 9.5h4M17 14.5h4" /></>) },
   { to: '/calendrier', label: 'Agenda', matches: ['/calendrier'], icon: icon(<><rect x="3.5" y="5" width="17" height="15" rx="2" /><path d="M3.5 10h17M8 3v4M16 3v4" /></>) },
   { to: '/listes', label: 'Listes', matches: ['/listes'], icon: icon(<path d="M9 7h11M9 12h11M9 17h11M4.5 7h.01M4.5 12h.01M4.5 17h.01" />) },
-  { to: '/plus', label: 'Plus', matches: ['/plus', '/depenses', '/alphabet', '/passeport', '/parametres', '/jardin', '/bocal', '/paris', '/bons'], icon: icon(<path d="M5 12h.01M12 12h.01M19 12h.01" />) },
+  { to: '/plus', label: 'Plus', matches: ['/plus', '/depenses', '/alphabet', '/passeport', '/parametres', '/jardin', '/bocal', '/paris', '/bons', '/roue'], icon: icon(<path d="M5 12h.01M12 12h.01M19 12h.01" />) },
 ]
 
 export function TabBar() {

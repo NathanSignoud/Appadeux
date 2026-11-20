@@ -44,6 +44,7 @@ src/
   features/bocal/     Bocal à mots doux (pioche via draw_love_note)
   features/paris/     Paris et gages (registre des gages dus)
   features/bons/      Bons à gratter (ScratchCard = canvas à gratter, CouponCard = ticket)
+  features/roue/      La roue de l'indécision : choix gardés sur le téléphone (localStorage), pas de table ; wheel.ts = calcul d'arrêt testé
   features/accueil/   tableau de bord : compte à rebours, absences, prochain événement, nouveaux matchs, solde, choses à faire
 public/logo.svg       source des icônes PWA (réglages : pwa-assets.config.ts)
 supabase/
@@ -113,7 +114,7 @@ Passeport : aucune table, tout est calculé depuis les films vus (`matches.done_
 npm run dev                                   # serveur local (http://localhost:5173)
 npm run build                                 # vérif TypeScript + build dans dist/
 npm run preview                               # sert le build (pour tester la PWA)
-npm test                                      # tests de la logique pure (dates, argent, passeport, ciné, jardin) + empreinte CSP ; Node sans dépendance
+npm test                                      # tests de la logique pure (dates, argent, passeport, ciné, jardin, roue) + empreinte CSP ; Node sans dépendance
 node scripts/simplify-map.mjs                 # régénérer la carte du monde allégée (rarement)
 npx supabase link --project-ref <ref>         # relier le dossier au projet Supabase (une fois)
 npx supabase db push --remote                          # appliquer les migrations sur le projet distant

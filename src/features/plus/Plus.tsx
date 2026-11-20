@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 
 const pages = [
+  { to: '/roue', titre: 'La roue', texte: 'Indécis ? Mettez vos choix, la roue tranche' },
   { to: '/jardin', titre: 'Notre jardin', texte: 'La plante qui pousse avec vos moments à deux' },
   { to: '/bocal', titre: 'Le bocal à mots doux', texte: 'Un mot glissé, un mot pioché par jour' },
   { to: '/paris', titre: 'Paris et gages', texte: 'Qui a gagné, qui doit un massage' },
