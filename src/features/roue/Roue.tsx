@@ -75,7 +75,7 @@ export function Roue() {
 
   return (
     <>
-      <h1 className="text-3xl font-bold">La roue</h1>
+      <h1 className="text-3xl font-bold">La roue du destin</h1>
 
       <section className="flex flex-col items-center gap-4 rounded-[32px] bg-white px-4 py-6">
         <div className="relative w-full max-w-72">
